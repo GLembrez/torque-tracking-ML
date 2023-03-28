@@ -37,8 +37,13 @@ class TorqueTrackingDataset(torch.utils.data.Dataset):
         return len(self.dataset)
 
     def __getitem__(self, idt):
-        x = self.dataset[idt:idt+self.sequence_len, 1:self.input_len+1]
-        y = self.dataset[idt:idt+self.sequence_len, self.input_len+1:]
+        time_len = self.dataset.size(0)
+        if idt+self.sequence_len < time_len :
+            x = self.dataset[idt:idt+self.sequence_len, 1:self.input_len+1]
+            y = self.dataset[idt:idt+self.sequence_len, self.input_len+1:]
+        else :
+            x = torch.from_numpy(np.zeros((self.sequence_len,self.input_len))).float()
+            y = torch.from_numpy(np.zeros((self.sequence_len,1))).float()
 
         if self.norm:
             sample = {'input': (x-self.mean)/self.std, 'label': y}

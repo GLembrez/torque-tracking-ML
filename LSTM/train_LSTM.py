@@ -9,6 +9,16 @@ from torch.utils.data import DataLoader
 from net_LSTM import LSTM
 from dataloader_LSTM import TorqueTrackingDataset
 
+####################### HYPERPARAMETERS ###########################
+
+input_len = 2
+sequence_len = 10
+num_layers = 2
+hidden_size = 64
+
+###################################################################
+
+
 def train(net, train_data, criterion, optimizer):
     net.train()
     losses = []
@@ -16,8 +26,10 @@ def train(net, train_data, criterion, optimizer):
     for inputs, targets in train_data:
         inputs  = torch.autograd.Variable(inputs.cuda())
         targets = torch.autograd.Variable(targets.cuda())
+        
+        batch_size = inputs.size(0)
         out = net(inputs)
-        loss = criterion(out, targets)
+        loss = criterion(out, targets.view(batch_size*sequence_len))
 
         losses.append(loss.data)
         optimizer.zero_grad()
@@ -33,8 +45,9 @@ def valid(net, valid_data, criterion):
         for inputs, targets in valid_data:
             inputs = torch.autograd.Variable(inputs.cuda())
             targets = torch.autograd.Variable(targets.cuda())
+            batch_size = inputs.size(0)
             out = net(inputs)
-            error.append(criterion(out, targets).data)
+            error.append(criterion(out, targets.view(batch_size*sequence_len)).data)
     return sum(error)/len(error)
 
 def main():
@@ -45,7 +58,6 @@ def main():
     ap.add_argument("-d", "--dataset", required=True)
     ap.add_argument("-c", "--checkpoint", required=False, default=50, type=int)
     ap.add_argument("--batch_size", required=False, default=8, type=int)
-    ap.add_argument("--valid_batch_size", required=False, default=2, type=int)
     ap.add_argument("--rate", required=False, default=1e-4, type=float)
     args = ap.parse_args()
 
@@ -82,13 +94,15 @@ def main():
     torch.set_default_tensor_type(torch.FloatTensor)
 
     # Set network model, loss criterion and optimizer
-    input_len = 2
-    sequence_len = 10
-    net = LSTM(num_features=1, input_size=input_len, hidden_size=64, num_layers=2, seq_length=sequence_len)
+    net = LSTM(num_features=1, input_size=input_len, hidden_size=hidden_size, num_layers=num_layers, seq_length=sequence_len)
     net = torch.nn.DataParallel(net).cuda()
     criterion = torch.nn.MSELoss().cuda()
     optimizer = torch.optim.Adam(net.parameters(), lr=args.rate)
     logging.info(repr(optimizer))
+    h_n = torch.autograd.Variable(torch.zeros(num_layers, args.batch_size, hidden_size)) #hidden state
+    c_n = torch.autograd.Variable(torch.zeros(num_layers, args.batch_size, hidden_size)) #internal state
+        
+
 
     ncpus = os.cpu_count()
     # Set train and valid dataloaders
@@ -98,8 +112,8 @@ def main():
 
     meanstd = {'mean': train_set.mean, 'std':train_set.std}
     valid_set = TorqueTrackingDataset(input_len,sequence_len, os.path.join(args.dataset, 'valid.txt'), meanstd, is_train=False)
-    valid_data = DataLoader(valid_set, batch_size=args.valid_batch_size, shuffle=True, num_workers=ncpus, drop_last=True)
-    logging.info("valid data: %d batches of batch size %d", len(valid_data), args.valid_batch_size)
+    valid_data = DataLoader(valid_set, batch_size=args.batch_size, shuffle=True, num_workers=ncpus, drop_last=True)
+    logging.info("valid data: %d batches of batch size %d", len(valid_data), args.batch_size)
 
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99)
 

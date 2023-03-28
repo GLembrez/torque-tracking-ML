@@ -54,7 +54,7 @@ Both values are set to 0 to enable custom joint friction model.
         mkdir ../data/$i; 
         for b in $V; 
             do echo $b; 
-            python extract_mc_log.py --logpath $b --out ../data/$i/train.txt --num-clips 1000 --joint-name $i --append; 
+            python data_extractor.py --logpath $b --out ../data/$i/train.txt  --joint-name $i --append ; 
         done; 
     done
 

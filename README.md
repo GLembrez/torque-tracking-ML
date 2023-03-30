@@ -38,6 +38,62 @@
 * RWRP -> right wrist lateral joint
 * RHDY -> right effector
 
+[info] [mc_mujoco] RCY, pgain = 5400.0, dgain = 54.0
+[info] [mc_mujoco] RCR, pgain = 12925.0, dgain = 103.4
+[info] [mc_mujoco] RCP, pgain = 16000.0, dgain = 160.0
+[info] [mc_mujoco] RKP, pgain = 36000.0, dgain = 360.0
+[info] [mc_mujoco] RAP, pgain = 8000.0, dgain = 80.0
+[info] [mc_mujoco] RAR, pgain = 2244.0, dgain = 22.44
+[info] [mc_mujoco] LCY, pgain = 5400.0, dgain = 54.0
+[info] [mc_mujoco] LCR, pgain = 12925.0, dgain = 103.4
+[info] [mc_mujoco] LCP, pgain = 16000.0, dgain = 160.0
+[info] [mc_mujoco] LKP, pgain = 36000.0, dgain = 360.0
+[info] [mc_mujoco] LAP, pgain = 8000.0, dgain = 80.0
+[info] [mc_mujoco] LAR, pgain = 2244.0, dgain = 22.44
+[info] [mc_mujoco] WP, pgain = 8000.0, dgain = 80.0
+[info] [mc_mujoco] WR, pgain = 8000.0, dgain = 80.0
+[info] [mc_mujoco] WY, pgain = 8000.0, dgain = 80.0
+[info] [mc_mujoco] HY, pgain = 1311.0, dgain = 13.11
+[info] [mc_mujoco] HP, pgain = 1311.0, dgain = 13.11
+[info] [mc_mujoco] RSC, pgain = 3235.0, dgain = 32.35
+[info] [mc_mujoco] RSP, pgain = 3235.0, dgain = 32.35
+[info] [mc_mujoco] RSR, pgain = 5586.0, dgain = 55.86
+[info] [mc_mujoco] RSY, pgain = 1429.0, dgain = 10.83
+[info] [mc_mujoco] REP, pgain = 8705.0, dgain = 87.05
+[info] [mc_mujoco] RWRY, pgain = 1386.0, dgain = 13.87
+[info] [mc_mujoco] RWRR, pgain = 1386.0, dgain = 13.87
+[info] [mc_mujoco] RWRP, pgain = 1492.0, dgain = 11.19
+[info] [mc_mujoco] RHDY, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] RTMP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] RTPIP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] RTDIP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] RIMP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] RIPIP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] RIDIP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] RMMP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] RMPIP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] RMDIP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] LSC, pgain = 3235.0, dgain = 32.35
+[info] [mc_mujoco] LSP, pgain = 3235.0, dgain = 32.35
+[info] [mc_mujoco] LSR, pgain = 5586.0, dgain = 55.86
+[info] [mc_mujoco] LSY, pgain = 1429.0, dgain = 10.83
+[info] [mc_mujoco] LEP, pgain = 8705.0, dgain = 87.05
+[info] [mc_mujoco] LWRY, pgain = 1386.0, dgain = 13.87
+[info] [mc_mujoco] LWRR, pgain = 1386.0, dgain = 13.87
+[info] [mc_mujoco] LWRP, pgain = 1492.0, dgain = 11.19
+[info] [mc_mujoco] LHDY, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] LTMP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] LTPIP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] LTDIP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] LIMP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] LIPIP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] LIDIP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] LMMP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] LMPIP, pgain = 693.0, dgain = 6.93
+[info] [mc_mujoco] LMDIP, pgain = 693.0, dgain = 6.93
+
+
+
 
 ## Change mujoco simulation parameters
 

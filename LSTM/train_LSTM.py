@@ -5,6 +5,8 @@ import logging
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
+from matplotlib import pyplot as plt
+
 
 from net_LSTM import LSTM
 from dataloader_LSTM import TorqueTrackingDataset
@@ -51,6 +53,8 @@ def valid(net, valid_data, criterion):
     return sum(error)/len(error)
 
 def main():
+    log_train_loss = []
+    log_valid_loss = []
 
     ap = argparse.ArgumentParser()
     ap.add_argument("-o", "--outdir", required=True, default=False)
@@ -122,6 +126,8 @@ def main():
             torch.save(net.state_dict(), os.path.join(args.outdir, "trained_" + str(int(epoch)) + ".model"))
         train_loss = train(net, train_data, criterion, optimizer)
         valid_loss = valid(net, valid_data, criterion)
+        log_train_loss.append(train_loss.item())
+        log_valid_loss.append(valid_loss.item())
         logging.info("iters: %d train_loss: %f valid_loss: %f lr: %f",
                      epoch,
                      train_loss.item(),
@@ -132,6 +138,15 @@ def main():
 
     torch.save(net.state_dict(), os.path.join(args.outdir, "trained.model"))
     torch.save(net, os.path.join(args.outdir, "trained.pth"))
+
+    fig = plt.figure()
+    plt.plot(log_train_loss,color='teal',linewidth=2,label='Train Loss')
+    plt.plot(log_valid_loss,color='lightsalmon',linewidth=2,label='Valid Loss')
+    plt.legend()
+    plt.xlabel('epoch')
+    plt.ylabel('MSE loss')
+    plt.title('Model training performances')
+    plt.show()
 
 if __name__=='__main__':
     main()

@@ -25,7 +25,7 @@ def parse(args):
     jId = joints.index(jname)
     tauIn = log['tauIn_' + repr(jId)][demo_start:][int(skip/LOG_DT):]
     sampled_tauIn = tauIn[::samplingStep]
-    cmdTau = log['tauCmd_' + repr(jId)][demo_start:][int(skip/LOG_DT):]
+    cmdTau = log['cmdTau_' + repr(jId)][demo_start:][int(skip/LOG_DT):] # + jname ? 
     sampled_cmdTau = cmdTau[::samplingStep]
     qIn = log['qIn_' + repr(jId)][demo_start:][int(skip/LOG_DT):]
     qIn_diff = [0] + (np.diff(qIn)/LOG_DT).tolist()

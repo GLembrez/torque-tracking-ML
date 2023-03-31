@@ -15,23 +15,19 @@ def parse(args):
     # parse mc-rtc log
     log = mc_log_ui.read_log(args.logpath)
 
-    # get start time of 'Demo' state
-    exec_main = log['Executor_Main']
-    demo_start = exec_main.index('Demo')
-    skip = 2 # seconds
 
     jname = args.joint_name
 
     jId = joints.index(jname)
-    tauIn = log['tauIn_' + repr(jId)][demo_start:][int(skip/LOG_DT):]
+    tauIn = log['tauIn_' + repr(jId)]
     sampled_tauIn = tauIn[::samplingStep]
-    cmdTau = log['cmdTau_' + repr(jId)][demo_start:][int(skip/LOG_DT):] # + jname ? 
+    cmdTau = log['cmdTau_' + jname] 
     sampled_cmdTau = cmdTau[::samplingStep]
-    qIn = log['qIn_' + repr(jId)][demo_start:][int(skip/LOG_DT):]
+    qIn = log['qIn_' + repr(jId)]
     qIn_diff = [0] + (np.diff(qIn)/LOG_DT).tolist()
     sampled_qIn_diff = qIn_diff[::samplingStep]
 
-    logtime = log['t'][demo_start:][int(skip/LOG_DT):]
+    logtime = log['t']
     sampledTime = logtime[::samplingStep]
 
     for i in range(len(sampledTime)) :

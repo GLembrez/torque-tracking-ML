@@ -3,13 +3,25 @@ import argparse
 import mc_log_ui
 from matplotlib import pyplot as plt
 
-SAMPLE_RATE = 0.010     #s
-HISTORY_LEN = 0.050     #s
-LOG_DT = 0.002          #s
+SAMPLE_RATE = 0.005     #s
+LOG_DT = 0.001          #s
 samplingStep = int(SAMPLE_RATE/LOG_DT) # sampling step
 
-joints=["RCY", "RCR", "RCP", "RKP", "RAP", "RAR",
-        "LCY", "LCR", "LCP", "LKP", "LAP", "LAR"]
+joints=["RCY", "RCR", "RCP", "RKP", "RAP", "RAR",     # right leg
+        "LCY", "LCR", "LCP", "LKP", "LAP", "LAR",     # left leg
+        "WP","WR","WY",                               # waist
+        "RSC","RSP","RSR","RSY","REP",                # right arm
+        "LSC","LSP","LSR","LSY","LEP"]                # left arm
+
+jointIdx = {"RCY" : 7, "RCR" : 8, "RCP" : 9, "RKP" : 10, "RAP" : 11, "RAR" : 12,     
+        "LCY" : 1, "LCR" : 2, "LCP" : 3, "LKP" : 4, "LAP" : 5, "LAR" : 6,     
+        "WP" : 13,"WR" : 14,"WY" : 15,                               
+        "RSC" : 50,"RSP" : 51,"RSR" : 52,"RSY" : 53,"REP" : 54,                
+        "LSC" : 32,"LSP" : 33,"LSR" : 34,"LSY" : 35,"LEP" : 36}               
+
+
+n_DOFs = len(joints)
+
 
 def parse(args):
     # parse mc-rtc log

@@ -16,19 +16,23 @@ class LSTM(nn.Module):
         self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size,
                           num_layers=num_layers, batch_first=True)  
         # fully connected layers :                          
-        self.fc = nn.Linear(hidden_size, num_features)                             
-        self.dropout = nn.Dropout(0.25)
+        self.fc = nn.Linear(hidden_size, num_features)                                
+        self.dropout = nn.Dropout(0.1)
         # self.relu = nn.ReLU()
     
     def forward(self,x):
         # size of x : N_batch x input_size
-        h_0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size).cuda()) #hidden state
-        c_0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size).cuda()) #internal state
+        if len(x.shape) == 3 :
+            h_0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size).cuda()) #hidden state
+            c_0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size).cuda()) #internal state
+        else :
+            h_0 = Variable(torch.zeros(self.num_layers, self.hidden_size).cuda()) #hidden state
+            c_0 = Variable(torch.zeros(self.num_layers, self.hidden_size).cuda()) #internal state
         
          # Propagate input through LSTM
         output, (h_n, c_n) = self.lstm(x, (h_0, c_0))       #lstm with input, hidden, and internal state  
         out = self.dropout(output)
         out = out.contiguous().view(-1, self.hidden_size)   #reshaping the data for Dense layer next
         out = self.fc(out)      #Final Output
-        out = out.contiguous().view(-1)
+        # out = out.contiguous().view(-1)
         return out

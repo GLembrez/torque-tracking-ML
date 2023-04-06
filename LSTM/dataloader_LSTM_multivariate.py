@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 class TorqueTrackingDataset(torch.utils.data.Dataset):
-    def __init__(self, input_dim, n_DOFs, sequence_len, path_to_txt, meanstd = {}, norm = True, is_train = True):
+    def __init__(self, input_dim, n_DOFs, sequence_len, path_to_txt, meanstd = {}, norm = False, is_train = True):
         self.norm = norm
         self.is_train = is_train
 

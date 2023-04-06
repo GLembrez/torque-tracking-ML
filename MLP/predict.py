@@ -42,52 +42,46 @@ def get_predictions(args):
 
     criterion = torch.nn.MSELoss().cuda()
 
-    #load dataset using dataloader
-    meanstd = torch.load(os.path.join(os.path.dirname(args.dataset), 'mean.pth.tar'))
-    eval_set = TorqueTrackingDataset(input_len,args.dataset, meanstd, is_train=False)
-    eval_data = DataLoader(eval_set, batch_size=EVAL_BATCH_SIZE, shuffle=False, num_workers=1)
-    print("valid data size is: {} batches of batch size: {}".format(len(eval_data), EVAL_BATCH_SIZE))
-
-
-
     with torch.no_grad():
         losses = []
-        targs = []
-        outs = []
         with open(args.dataset, 'r') as f:
             lines = [list(map(float, l.strip().split(','))) for l in f.readlines()]
-        fullDataset = torch.from_numpy(np.array(lines)).float()
-        cmdTorque = fullDataset[:,input_len-1]
+        dataset = torch.from_numpy(np.array(lines)).float()
+        T = dataset.shape[0]
+        targets_list = np.zeros(T)
+        output_list = np.zeros(T)
+        alpha_list = np.zeros(T)
 
-        for batch_id, (inputs, targets) in enumerate(eval_data):
-            #forward pass through network
-            inp = torch.autograd.Variable(inputs.cuda())
-            targets = torch.autograd.Variable(targets.cuda())
-            out = net(inp)
-            loss = criterion(out, targets)
-            losses.append(loss.item())
-            
-            targs.append(targets.cpu().numpy()[0])
-            outs.append(out.cpu().numpy()[0])
+        for t in range(T-5):
+            x = dataset[t:t+5, 1:3].reshape(10)
+            y = dataset[t+5, 3].reshape(1)
 
+            out = net(x)
 
-            #get evaluations
-            if args.verbose:
-                print("Batch: ", batch_id)
-                print("Loss = ", loss.item())
-                y = out.cpu().numpy()[0]
-                y_ = targets.cpu().numpy()[0]
+            loss = criterion(out, y.cuda())
+            losses.append(loss.data)
+            output_list[t] = out.cpu().numpy()[0]
+            targets_list[t] = y.cpu().numpy()[0]
+            alpha_list[t] = x.cpu().numpy()[5]
 
-        #visualize iff necessary
-        if args.visualize:
-            fig = plt.figure()
-            plt.plot(targs, color='teal', label = 'Torque error', linewidth=1)
-            plt.plot(outs, color='lightsalmon', label='Predicted torque error',linewidth = 1)
-            # plt.plot(cmdTorque,color='red',label='Command torque',linewidth=1)
-            plt.legend()
-            plt.show()
-                            
-        print("Mean loss: ", sum(losses)/len(losses))
+    print(sum(losses)/len(losses))
+    
+    fig = plt.figure()
+    ax1 = fig.add_subplot(2,1,1)
+    ax1.plot([0.001*t for t in range(T)], output_list, color = 'teal', label = 'prediction', linewidth=0.7)
+    ax1.plot([0.001*t for t in range(T)], targets_list, color = 'lightsalmon', label = 'torque error', linewidth=0.7)
+    ax1.set_xlim((0,2.5))
+    plt.legend()
+    # ax1.set_xlabel("t [s]")
+    ax1.set_ylabel("torque [Nm]")
+    ax2 = fig.add_subplot(2,1,2)
+    ax2.plot([0.001*t for t in range(T)], output_list-targets_list, color = 'teal', label = 'estimation error', linewidth=1)
+    ax2.set_xlim((0,2.5))
+    plt.legend()
+    ax2.set_xlabel("t [s]")
+    ax2.set_ylabel("torque [Nm]")
+    plt.show()
+    ax1.set_title("RKP")
     return
 
 

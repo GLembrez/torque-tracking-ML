@@ -1,0 +1,119 @@
+04/04/2023 17:30:41 root   INFO     Training for a total of 100 epochs
+04/04/2023 17:30:41 root   INFO     Weights are saved to /home/gabinlembrez/GitHub/torque-tracking-ML/exps/multivariate_v1/ after every 50 epochs
+04/04/2023 17:30:41 root   INFO     Dataset path: /home/gabinlembrez/GitHub/torque-tracking-ML/data
+04/04/2023 17:30:41 root   INFO     Random Seed: 0
+04/04/2023 17:30:43 root   INFO     Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    capturable: False
+    differentiable: False
+    eps: 1e-08
+    foreach: None
+    fused: False
+    lr: 0.0001
+    maximize: False
+    weight_decay: 0
+)
+04/04/2023 17:30:45 root   INFO     train data: 945 batches of batch size 64
+04/04/2023 17:30:46 root   INFO     valid data: 518 batches of batch size 64
+04/04/2023 17:30:52 root   INFO     iters: 0 train_loss: 4.947934 valid_loss: 1.850992 lr: 0.000100
+04/04/2023 17:30:59 root   INFO     iters: 1 train_loss: 1.805978 valid_loss: 1.120482 lr: 0.000099
+04/04/2023 17:31:05 root   INFO     iters: 2 train_loss: 1.238707 valid_loss: 0.853865 lr: 0.000099
+04/04/2023 17:31:11 root   INFO     iters: 3 train_loss: 1.002866 valid_loss: 0.717353 lr: 0.000099
+04/04/2023 17:31:18 root   INFO     iters: 4 train_loss: 0.868128 valid_loss: 0.634245 lr: 0.000099
+04/04/2023 17:31:24 root   INFO     iters: 5 train_loss: 0.776206 valid_loss: 0.570997 lr: 0.000099
+04/04/2023 17:31:30 root   INFO     iters: 6 train_loss: 0.707706 valid_loss: 0.521907 lr: 0.000099
+04/04/2023 17:31:37 root   INFO     iters: 7 train_loss: 0.654373 valid_loss: 0.486862 lr: 0.000099
+04/04/2023 17:31:43 root   INFO     iters: 8 train_loss: 0.609410 valid_loss: 0.461079 lr: 0.000099
+04/04/2023 17:31:50 root   INFO     iters: 9 train_loss: 0.570222 valid_loss: 0.427781 lr: 0.000099
+04/04/2023 17:31:56 root   INFO     iters: 10 train_loss: 0.536321 valid_loss: 0.404215 lr: 0.000099
+04/04/2023 17:32:03 root   INFO     iters: 11 train_loss: 0.504331 valid_loss: 0.384770 lr: 0.000098
+04/04/2023 17:32:09 root   INFO     iters: 12 train_loss: 0.477498 valid_loss: 0.372060 lr: 0.000098
+04/04/2023 17:32:16 root   INFO     iters: 13 train_loss: 0.452966 valid_loss: 0.348288 lr: 0.000098
+04/04/2023 17:32:22 root   INFO     iters: 14 train_loss: 0.430930 valid_loss: 0.332029 lr: 0.000098
+04/04/2023 17:32:29 root   INFO     iters: 15 train_loss: 0.412122 valid_loss: 0.316608 lr: 0.000098
+04/04/2023 17:32:35 root   INFO     iters: 16 train_loss: 0.394013 valid_loss: 0.306662 lr: 0.000098
+04/04/2023 17:32:42 root   INFO     iters: 17 train_loss: 0.379025 valid_loss: 0.289851 lr: 0.000098
+04/04/2023 17:32:48 root   INFO     iters: 18 train_loss: 0.365938 valid_loss: 0.284266 lr: 0.000098
+04/04/2023 17:32:55 root   INFO     iters: 19 train_loss: 0.353804 valid_loss: 0.271746 lr: 0.000098
+04/04/2023 17:33:02 root   INFO     iters: 20 train_loss: 0.343349 valid_loss: 0.262793 lr: 0.000098
+04/04/2023 17:33:08 root   INFO     iters: 21 train_loss: 0.333318 valid_loss: 0.260649 lr: 0.000097
+04/04/2023 17:33:15 root   INFO     iters: 22 train_loss: 0.324821 valid_loss: 0.251043 lr: 0.000097
+04/04/2023 17:33:21 root   INFO     iters: 23 train_loss: 0.316539 valid_loss: 0.243397 lr: 0.000097
+04/04/2023 17:33:28 root   INFO     iters: 24 train_loss: 0.309023 valid_loss: 0.235375 lr: 0.000097
+04/04/2023 17:33:35 root   INFO     iters: 25 train_loss: 0.303040 valid_loss: 0.231998 lr: 0.000097
+04/04/2023 17:33:41 root   INFO     iters: 26 train_loss: 0.297067 valid_loss: 0.227527 lr: 0.000097
+04/04/2023 17:33:48 root   INFO     iters: 27 train_loss: 0.291271 valid_loss: 0.222117 lr: 0.000097
+04/04/2023 17:33:54 root   INFO     iters: 28 train_loss: 0.285892 valid_loss: 0.216709 lr: 0.000097
+04/04/2023 17:34:01 root   INFO     iters: 29 train_loss: 0.281130 valid_loss: 0.213699 lr: 0.000097
+04/04/2023 17:34:07 root   INFO     iters: 30 train_loss: 0.276306 valid_loss: 0.209349 lr: 0.000097
+04/04/2023 17:34:14 root   INFO     iters: 31 train_loss: 0.272813 valid_loss: 0.210025 lr: 0.000096
+04/04/2023 17:34:20 root   INFO     iters: 32 train_loss: 0.268747 valid_loss: 0.204827 lr: 0.000096
+04/04/2023 17:34:27 root   INFO     iters: 33 train_loss: 0.265271 valid_loss: 0.199281 lr: 0.000096
+04/04/2023 17:34:33 root   INFO     iters: 34 train_loss: 0.261994 valid_loss: 0.196965 lr: 0.000096
+04/04/2023 17:34:40 root   INFO     iters: 35 train_loss: 0.258361 valid_loss: 0.200535 lr: 0.000096
+04/04/2023 17:34:47 root   INFO     iters: 36 train_loss: 0.256123 valid_loss: 0.190708 lr: 0.000096
+04/04/2023 17:34:53 root   INFO     iters: 37 train_loss: 0.252819 valid_loss: 0.189484 lr: 0.000096
+04/04/2023 17:35:00 root   INFO     iters: 38 train_loss: 0.250370 valid_loss: 0.187372 lr: 0.000096
+04/04/2023 17:35:06 root   INFO     iters: 39 train_loss: 0.247701 valid_loss: 0.182757 lr: 0.000096
+04/04/2023 17:35:13 root   INFO     iters: 40 train_loss: 0.245630 valid_loss: 0.183080 lr: 0.000096
+04/04/2023 17:35:20 root   INFO     iters: 41 train_loss: 0.243654 valid_loss: 0.180353 lr: 0.000095
+04/04/2023 17:35:26 root   INFO     iters: 42 train_loss: 0.241281 valid_loss: 0.179901 lr: 0.000095
+04/04/2023 17:35:33 root   INFO     iters: 43 train_loss: 0.239373 valid_loss: 0.175938 lr: 0.000095
+04/04/2023 17:35:39 root   INFO     iters: 44 train_loss: 0.237338 valid_loss: 0.176035 lr: 0.000095
+04/04/2023 17:35:46 root   INFO     iters: 45 train_loss: 0.235985 valid_loss: 0.175513 lr: 0.000095
+04/04/2023 17:35:53 root   INFO     iters: 46 train_loss: 0.234027 valid_loss: 0.173602 lr: 0.000095
+04/04/2023 17:35:59 root   INFO     iters: 47 train_loss: 0.232608 valid_loss: 0.171098 lr: 0.000095
+04/04/2023 17:36:06 root   INFO     iters: 48 train_loss: 0.231135 valid_loss: 0.169768 lr: 0.000095
+04/04/2023 17:36:13 root   INFO     iters: 49 train_loss: 0.229167 valid_loss: 0.165548 lr: 0.000095
+04/04/2023 17:36:19 root   INFO     iters: 50 train_loss: 0.227637 valid_loss: 0.166877 lr: 0.000095
+04/04/2023 17:36:26 root   INFO     iters: 51 train_loss: 0.226444 valid_loss: 0.163844 lr: 0.000094
+04/04/2023 17:36:32 root   INFO     iters: 52 train_loss: 0.225526 valid_loss: 0.163446 lr: 0.000094
+04/04/2023 17:36:39 root   INFO     iters: 53 train_loss: 0.224017 valid_loss: 0.162002 lr: 0.000094
+04/04/2023 17:36:46 root   INFO     iters: 54 train_loss: 0.221929 valid_loss: 0.158244 lr: 0.000094
+04/04/2023 17:36:52 root   INFO     iters: 55 train_loss: 0.221352 valid_loss: 0.159838 lr: 0.000094
+04/04/2023 17:36:59 root   INFO     iters: 56 train_loss: 0.220512 valid_loss: 0.157071 lr: 0.000094
+04/04/2023 17:37:06 root   INFO     iters: 57 train_loss: 0.218708 valid_loss: 0.157176 lr: 0.000094
+04/04/2023 17:37:12 root   INFO     iters: 58 train_loss: 0.217994 valid_loss: 0.154550 lr: 0.000094
+04/04/2023 17:37:18 root   INFO     iters: 59 train_loss: 0.216561 valid_loss: 0.152603 lr: 0.000094
+04/04/2023 17:37:25 root   INFO     iters: 60 train_loss: 0.215823 valid_loss: 0.153121 lr: 0.000094
+04/04/2023 17:37:32 root   INFO     iters: 61 train_loss: 0.214480 valid_loss: 0.152162 lr: 0.000093
+04/04/2023 17:37:38 root   INFO     iters: 62 train_loss: 0.213518 valid_loss: 0.150687 lr: 0.000093
+04/04/2023 17:37:45 root   INFO     iters: 63 train_loss: 0.212642 valid_loss: 0.152221 lr: 0.000093
+04/04/2023 17:37:51 root   INFO     iters: 64 train_loss: 0.211562 valid_loss: 0.151079 lr: 0.000093
+04/04/2023 17:37:58 root   INFO     iters: 65 train_loss: 0.211254 valid_loss: 0.148146 lr: 0.000093
+04/04/2023 17:38:04 root   INFO     iters: 66 train_loss: 0.209906 valid_loss: 0.146493 lr: 0.000093
+04/04/2023 17:38:11 root   INFO     iters: 67 train_loss: 0.209091 valid_loss: 0.145041 lr: 0.000093
+04/04/2023 17:38:17 root   INFO     iters: 68 train_loss: 0.208364 valid_loss: 0.145724 lr: 0.000093
+04/04/2023 17:38:24 root   INFO     iters: 69 train_loss: 0.207494 valid_loss: 0.145863 lr: 0.000093
+04/04/2023 17:38:31 root   INFO     iters: 70 train_loss: 0.207152 valid_loss: 0.142736 lr: 0.000093
+04/04/2023 17:38:37 root   INFO     iters: 71 train_loss: 0.205884 valid_loss: 0.141778 lr: 0.000092
+04/04/2023 17:38:44 root   INFO     iters: 72 train_loss: 0.205259 valid_loss: 0.141196 lr: 0.000092
+04/04/2023 17:38:50 root   INFO     iters: 73 train_loss: 0.204643 valid_loss: 0.140951 lr: 0.000092
+04/04/2023 17:38:57 root   INFO     iters: 74 train_loss: 0.203963 valid_loss: 0.139602 lr: 0.000092
+04/04/2023 17:39:03 root   INFO     iters: 75 train_loss: 0.203301 valid_loss: 0.139785 lr: 0.000092
+04/04/2023 17:39:10 root   INFO     iters: 76 train_loss: 0.202540 valid_loss: 0.138162 lr: 0.000092
+04/04/2023 17:39:17 root   INFO     iters: 77 train_loss: 0.201931 valid_loss: 0.136766 lr: 0.000092
+04/04/2023 17:39:23 root   INFO     iters: 78 train_loss: 0.200920 valid_loss: 0.137250 lr: 0.000092
+04/04/2023 17:39:30 root   INFO     iters: 79 train_loss: 0.200895 valid_loss: 0.139205 lr: 0.000092
+04/04/2023 17:39:36 root   INFO     iters: 80 train_loss: 0.200275 valid_loss: 0.136894 lr: 0.000092
+04/04/2023 17:39:43 root   INFO     iters: 81 train_loss: 0.199585 valid_loss: 0.137152 lr: 0.000091
+04/04/2023 17:39:49 root   INFO     iters: 82 train_loss: 0.198945 valid_loss: 0.137024 lr: 0.000091
+04/04/2023 17:39:56 root   INFO     iters: 83 train_loss: 0.198143 valid_loss: 0.134334 lr: 0.000091
+04/04/2023 17:40:03 root   INFO     iters: 84 train_loss: 0.197792 valid_loss: 0.133724 lr: 0.000091
+04/04/2023 17:40:09 root   INFO     iters: 85 train_loss: 0.197749 valid_loss: 0.136734 lr: 0.000091
+04/04/2023 17:40:16 root   INFO     iters: 86 train_loss: 0.196782 valid_loss: 0.132161 lr: 0.000091
+04/04/2023 17:40:22 root   INFO     iters: 87 train_loss: 0.196055 valid_loss: 0.132285 lr: 0.000091
+04/04/2023 17:40:29 root   INFO     iters: 88 train_loss: 0.195645 valid_loss: 0.131747 lr: 0.000091
+04/04/2023 17:40:35 root   INFO     iters: 89 train_loss: 0.195592 valid_loss: 0.133017 lr: 0.000091
+04/04/2023 17:40:42 root   INFO     iters: 90 train_loss: 0.194617 valid_loss: 0.131904 lr: 0.000091
+04/04/2023 17:40:49 root   INFO     iters: 91 train_loss: 0.194490 valid_loss: 0.133382 lr: 0.000090
+04/04/2023 17:40:55 root   INFO     iters: 92 train_loss: 0.193877 valid_loss: 0.131711 lr: 0.000090
+04/04/2023 17:41:02 root   INFO     iters: 93 train_loss: 0.193063 valid_loss: 0.128520 lr: 0.000090
+04/04/2023 17:41:08 root   INFO     iters: 94 train_loss: 0.192598 valid_loss: 0.134586 lr: 0.000090
+04/04/2023 17:41:15 root   INFO     iters: 95 train_loss: 0.192620 valid_loss: 0.126941 lr: 0.000090
+04/04/2023 17:41:21 root   INFO     iters: 96 train_loss: 0.192316 valid_loss: 0.126485 lr: 0.000090
+04/04/2023 17:41:28 root   INFO     iters: 97 train_loss: 0.191086 valid_loss: 0.127300 lr: 0.000090
+04/04/2023 17:41:34 root   INFO     iters: 98 train_loss: 0.191160 valid_loss: 0.125690 lr: 0.000090
+04/04/2023 17:41:41 root   INFO     iters: 99 train_loss: 0.190745 valid_loss: 0.125834 lr: 0.000090

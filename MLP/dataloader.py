@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 class TorqueTrackingDataset(torch.utils.data.Dataset):
-    def __init__(self, input_dim, path_to_txt, meanstd = {}, norm = True, is_train = True, visualize = False):
+    def __init__(self, input_dim, path_to_txt, meanstd = {}, norm = False, is_train = True, visualize = False):
         self.norm = norm
         self.is_train = is_train
         self.visualize = visualize
@@ -37,19 +37,13 @@ class TorqueTrackingDataset(torch.utils.data.Dataset):
         return len(self.dataset)
 
     def __getitem__(self, idx):
-        x = self.dataset[idx, :self.input_len]
-        y = self.dataset[idx, self.input_len:]
-
-        if self.visualize:
-            ax = plt.axes()
-            ax.plot(x[:len(x)//2], 'r', label='qDot')
-            ax.plot(x[len(x)//2:], 'g', label='tau')
-            label = 'tau = {}'.format(y[0])
-            ax.text(0.5, 0.5, label,
-                    bbox=dict(facecolor='red', alpha=0.5),
-                    transform=ax.transAxes)
-            plt.legend()
-            plt.show()
+        time_len = self.dataset.size(0)
+        if idx+5 < time_len :
+            x = self.dataset[idx:idx+5, 1:3].reshape(10)
+            y = self.dataset[idx+5, 3].reshape(1)
+        else :
+            x = torch.from_numpy(np.zeros(10)).float()
+            y = torch.from_numpy(np.zeros(1)).float()
 
         if self.norm:
             sample = {'input': (x-self.mean)/self.std, 'label': y}

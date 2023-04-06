@@ -32,7 +32,7 @@ def train(net, train_data, criterion, optimizer):
         
         batch_size = inputs.size(0)
         out = net(inputs)
-        loss = criterion(out, targets.contiguous().view(-1))
+        loss = criterion(out, targets.view(-1, n_DOFs))
 
 
 
@@ -52,7 +52,7 @@ def valid(net, valid_data, criterion):
             targets = torch.autograd.Variable(targets.cuda())
             batch_size = inputs.size(0)
             out = net(inputs)
-            error.append(criterion(out, targets.contiguous().view(-1)).data)
+            error.append(criterion(out, targets.view(-1, n_DOFs)).data)
     return sum(error)/len(error)
 
 def main():

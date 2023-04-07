@@ -1,6 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from random import random
 
 def homogeneous_transform(d,alpha,r,theta):
     # Compute homogeneous tranform i-1 -> i
@@ -73,31 +74,56 @@ r_list = np.array([r1,0,r3,0,r5,0,r7])
 
 ### FORWARD KINEMATICS ###
 
-q = np.array([-1,2,0.6,-0.5,0.9,0.7,0])
-TB1 = homogeneous_transform(d_list[0],alpha_list[0],r_list[0],q[0])
-T12 = homogeneous_transform(d_list[1],alpha_list[1],r_list[1],q[1])
-T23 = homogeneous_transform(d_list[2],alpha_list[2],r_list[2],q[2])
-T34 = homogeneous_transform(d_list[3],alpha_list[3],r_list[3],q[3])
-T45 = homogeneous_transform(d_list[4],alpha_list[4],r_list[4],q[4])
-T56 = homogeneous_transform(d_list[5],alpha_list[5],r_list[5],q[5])
-T6E = homogeneous_transform(d_list[6],alpha_list[6],r_list[6],q[6])
-
-O = np.array([0,0,0,1])
-OB = O
-O2 = TB1.dot(T12).dot(O)
-O4 = TB1.dot(T12).dot(T23).dot(T34).dot(OB)
-O6 = TB1.dot(T12).dot(T23).dot(T34).dot(T45).dot(T56).dot(OB)
-OE = TB1.dot(T12).dot(T23).dot(T34).dot(T45).dot(T56).dot(T6E).dot(O)
-print(OE)
-
-X = [OB[0],O2[0],O4[0],O6[0],OE[0]]
-Y = [OB[1],O2[1],O4[1],O6[1],OE[1]]
-Z = [OB[2],O2[2],O4[2],O6[2],OE[2]]
+q = np.zeros(n_DOFs)
+q_inf = np.array([-np.pi,-2.15,-np.pi,-2.45,-np.pi,-2,-np.pi])
+q_sup = np.array([np.pi,2.15,np.pi,2.45,np.pi,2,np.pi])
 
 
 
-visual = plt.figure()
-ax = visual.add_subplot(111,projection='3d')
-ax.plot(X,Y,Z, color = 'teal')
-set_axes_equal(ax)
-plt.show()
+for i in range(3) :
+    for j in range(7) :
+        q[j] = random() *  (q_sup[j] - q_inf[j]) + q_inf[j]
+
+
+    TB1 = homogeneous_transform(d_list[0],alpha_list[0],r_list[0],q[0])
+    T12 = homogeneous_transform(d_list[1],alpha_list[1],r_list[1],q[1])
+    T23 = homogeneous_transform(d_list[2],alpha_list[2],r_list[2],q[2])
+    T34 = homogeneous_transform(d_list[3],alpha_list[3],r_list[3],q[3])
+    T45 = homogeneous_transform(d_list[4],alpha_list[4],r_list[4],q[4])
+    T56 = homogeneous_transform(d_list[5],alpha_list[5],r_list[5],q[5])
+    T6E = homogeneous_transform(d_list[6],alpha_list[6],r_list[6],q[6])
+
+    O = np.array([0,0,0,1])
+    z = np.array([0,0,1,0])
+    y = np.array([0,1,0,0])
+    x = np.array([1,0,0,0])
+    OB = O
+    O2 = TB1.dot(T12).dot(O)
+    O4 = TB1.dot(T12).dot(T23).dot(T34).dot(OB)
+    O6 = TB1.dot(T12).dot(T23).dot(T34).dot(T45).dot(T56).dot(OB)
+    OE = TB1.dot(T12).dot(T23).dot(T34).dot(T45).dot(T56).dot(T6E).dot(O)
+    zE = forward_kinematics(n_DOFs,d_list,alpha_list,r_list,q).dot(z)
+    yE = forward_kinematics(n_DOFs,d_list,alpha_list,r_list,q).dot(y)
+    xE = forward_kinematics(n_DOFs,d_list,alpha_list,r_list,q).dot(x)
+
+
+
+    X = [OB[0],O2[0],O4[0],O6[0],OE[0]]
+    Y = [OB[1],O2[1],O4[1],O6[1],OE[1]]
+    Z = [OB[2],O2[2],O4[2],O6[2],OE[2]]
+    visual = plt.figure()
+    ax = visual.add_subplot(111,projection='3d')
+    # for i in range(10000) :
+    #     for jointId in range(n_DOFs):
+    #         q[jointId] = random() * (q_sup[jointId] - q_inf[jointId]) + q_inf[jointId]
+    #     T = forward_kinematics(n_DOFs,d_list,alpha_list,r_list,q)
+    #     OE = T.dot(O)
+    #     ax.plot([OE[0]],[OE[1]],[OE[2]],'.',  color = 'teal')
+
+    ax.plot(X,Y,Z,  color = 'black')
+    ax.quiver(OE[0], OE[1], OE[2], zE[0], zE[1], zE[2], length=0.2, normalize=True, color = 'blue')
+    ax.quiver(OE[0], OE[1], OE[2], yE[0], yE[1], yE[2], length=0.2, normalize=True, color = 'green')
+    ax.quiver(OE[0], OE[1], OE[2], xE[0], xE[1], xE[2], length=0.2, normalize=True, color = 'red')
+    print(forward_kinematics(n_DOFs,d_list,alpha_list,r_list,q))
+    set_axes_equal(ax)
+    plt.show()

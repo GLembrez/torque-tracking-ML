@@ -74,15 +74,19 @@ r_list = np.array([r1,0,r3,0,r5,0,r7])
 
 ### FORWARD KINEMATICS ###
 
-q = np.zeros(n_DOFs)
+q = np.zeros(7)
+print(forward_kinematics(n_DOFs,d_list,alpha_list,r_list,q))
 q_inf = np.array([-np.pi,-2.15,-np.pi,-2.45,-np.pi,-2,-np.pi])
 q_sup = np.array([np.pi,2.15,np.pi,2.45,np.pi,2,np.pi])
 
 
 
-for i in range(3) :
-    for j in range(7) :
+for i in range(1) :
+    for j in range(2) :
         q[j] = random() *  (q_sup[j] - q_inf[j]) + q_inf[j]
+
+    q[0] = 1.20035
+    q[1] = -1.57718
 
 
     TB1 = homogeneous_transform(d_list[0],alpha_list[0],r_list[0],q[0])
@@ -92,6 +96,7 @@ for i in range(3) :
     T45 = homogeneous_transform(d_list[4],alpha_list[4],r_list[4],q[4])
     T56 = homogeneous_transform(d_list[5],alpha_list[5],r_list[5],q[5])
     T6E = homogeneous_transform(d_list[6],alpha_list[6],r_list[6],q[6])
+    T = forward_kinematics(n_DOFs,d_list,alpha_list,r_list,q)
 
     O = np.array([0,0,0,1])
     z = np.array([0,0,1,0])
@@ -102,9 +107,12 @@ for i in range(3) :
     O4 = TB1.dot(T12).dot(T23).dot(T34).dot(OB)
     O6 = TB1.dot(T12).dot(T23).dot(T34).dot(T45).dot(T56).dot(OB)
     OE = TB1.dot(T12).dot(T23).dot(T34).dot(T45).dot(T56).dot(T6E).dot(O)
-    zE = forward_kinematics(n_DOFs,d_list,alpha_list,r_list,q).dot(z)
-    yE = forward_kinematics(n_DOFs,d_list,alpha_list,r_list,q).dot(y)
-    xE = forward_kinematics(n_DOFs,d_list,alpha_list,r_list,q).dot(x)
+    zE = T.dot(z)
+    yE = T.dot(y)
+    xE = T.dot(x)
+    print(T)
+    print(OE)
+    print(zE)
 
 
 
@@ -124,6 +132,5 @@ for i in range(3) :
     ax.quiver(OE[0], OE[1], OE[2], zE[0], zE[1], zE[2], length=0.2, normalize=True, color = 'blue')
     ax.quiver(OE[0], OE[1], OE[2], yE[0], yE[1], yE[2], length=0.2, normalize=True, color = 'green')
     ax.quiver(OE[0], OE[1], OE[2], xE[0], xE[1], xE[2], length=0.2, normalize=True, color = 'red')
-    print(forward_kinematics(n_DOFs,d_list,alpha_list,r_list,q))
     set_axes_equal(ax)
     plt.show()

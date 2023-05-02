@@ -1,0 +1,64 @@
+
+import mc_log_ui
+from matplotlib import pyplot as plt 
+import numpy as np
+from scipy.optimize import least_squares as lsq
+
+
+
+log = mc_log_ui.read_log('/home/gabinlembrez/Torque_tracking_logs/Kinova/real_random_sample_v3.bin')
+T           = log["t"]
+
+
+tauOut = np.zeros((7,len(T)))
+tauIn = np.zeros((7,len(T)))
+alpha = np.zeros((7,len(T)))
+alphaOut = np.zeros((7,len(T)))
+
+for i in range(7) :
+    tauOut[i,:]      = log["tauOut_"+str(i)]
+    tauIn[i,:]       = log["tauIn_"+str(i)]
+    alpha[i,:]       = log["alphaIn_"+str(i)]
+    alphaOut[i,:]    = log["alphaOut_"+str(i)]
+
+
+
+
+def fStribeck(x,p,t=0.001) :
+
+    Z           = 1/(p[0]*t+p[1])
+    delta       = p[4]
+    alpha       = p[5]*delta + p[3]
+    beta        = p[2]*delta
+
+    if np.abs(x) <= Z*p[2]:
+        return x/Z
+    else :
+        a = p[5]*Z**2 + Z
+        bp = -(x+delta+2*p[5]*Z*x+alpha*Z)
+        bl = (-x+delta-2*p[5]*Z*x+alpha*Z)
+        cp = p[5]*x**2 + alpha*x + beta
+        cl = p[5]*x**2 - alpha*x + beta
+        yp = (-bp - np.sqrt(bp**2-4*a*cp))/(2*a)
+        yl = (-bl + np.sqrt(bl**2-4*a*cl))/(2*a)
+
+        if x > Z*p[2]:
+            return yp
+        
+        if x < -Z*p[2]:
+            return yl
+        
+
+def F(x,i) :
+    f = np.zeros(len(T))
+    for t in range(len(T)) :
+        f[t] = (tauOut[i,t]-tauIn[i,t]) - fStribeck(alphaOut[i,t],x)
+    return f
+
+X = np.zeros((7,6))
+for i in range(7) :
+    X0 = np.array([5000,50,2.5,0.2,0.04,4.5])
+    solver = lsq(F,X0,bounds = ([0,np.inf]) ,ftol=1e-4,gtol=1e-4,xtol=1e-4,args=[i],verbose=2)
+    X[i,:] = solver.x
+
+print(X)

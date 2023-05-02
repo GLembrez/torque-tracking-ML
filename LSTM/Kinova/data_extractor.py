@@ -23,6 +23,7 @@ def parse(args):
     cmdTau = np.zeros((n_DOFs,len(sampledTime)))
     qIn = np.zeros((n_DOFs,len(sampledTime)))
     qIn_diff = np.zeros((n_DOFs,len(sampledTime)))
+    M = np.zeros((len(sampledTime),n_DOFs, n_DOFs))
 
     for jId in range(n_DOFs) :
 

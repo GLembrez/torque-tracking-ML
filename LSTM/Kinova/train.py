@@ -107,8 +107,6 @@ def main():
     criterion = torch.nn.MSELoss().cuda()
     optimizer = torch.optim.Adam(net.parameters(), lr=args.rate)
     logging.info(repr(optimizer))
-    h_n = torch.autograd.Variable(torch.zeros(num_layers, args.batch_size, hidden_size)) #hidden state
-    c_n = torch.autograd.Variable(torch.zeros(num_layers, args.batch_size, hidden_size)) #internal state
         
 
 

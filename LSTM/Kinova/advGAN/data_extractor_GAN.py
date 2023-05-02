@@ -42,25 +42,20 @@ def parse(args):
 
         
 
-        t      =    sampledTime[i]
-        qDot   =    qIn_diff[:,i] 
-        tauRef =    cmdTau[:,i] 
-        error  =    cmdTau[:,i] - tauIn[:,i]  
+        t      =    sampledTime[i]                          # sample Id 
+        alpha   =    qIn_diff[:,i]                          # joint velocity 
+        tauRef =    cmdTau[:,i]                             # desired torque
+        tauReal  =    tauIn[:,i]                            # measured torque
+        z = np.random.default_rng().uniform(0,1,7)          # random seed
 
         outline =       repr(t)      + \
-                ',' + ','.join(map(str, qDot))   + \
+                ',' + ','.join(map(str, alpha))   + \
                 ',' + ','.join(map(str, tauRef)) + \
-                ',' + ','.join(map(str, error))
+                ',' + ','.join(map(str, tauReal)) + \
+                ',' + ','.join(map(str, z))
 
         with open(args.out, 'a') as f:
             f.write(outline + '\n')
-
-    # fig = plt.figure()
-    # jname = "joint_2"
-    # plt.plot(logtime, log['cmdTau_1'], color = "lightsalmon", linewidth=1)
-    # plt.plot(sampledTime,cmdTau[1,:], ".", color = "teal")
-    # plt.show()
-        
 
     return
 

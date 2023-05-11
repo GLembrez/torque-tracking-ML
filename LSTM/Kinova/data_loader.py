@@ -6,8 +6,7 @@ import matplotlib.pyplot as plt
 
 
 class TorqueTrackingDataset(torch.utils.data.Dataset):
-    def __init__(self, input_dim, n_DOFs, sequence_len, path_to_txt, meanstd = {}, norm = False, is_train = True):
-        self.norm = norm
+    def __init__(self, input_dim, n_DOFs, sequence_len, path_to_txt, meanstd = {}, is_train = True):
         self.is_train = is_train
 
         with open(path_to_txt, 'r') as f:
@@ -41,13 +40,14 @@ class TorqueTrackingDataset(torch.utils.data.Dataset):
         time_len = self.dataset.size(0)
         if idt+self.sequence_len < time_len :
             x = self.dataset[idt:idt+self.sequence_len, 1:self.n_DOFs*self.input_len+1]
-            y = self.dataset[idt:idt+self.sequence_len, self.n_DOFs*self.input_len+1:]
+            y = self.dataset[idt:idt+self.sequence_len, self.n_DOFs*self.input_len+1:self.n_DOFs*(self.input_len+1)+1]
+            C = self.dataset[idt:idt+self.sequence_len, self.n_DOFs*(self.input_len+1)+1:self.n_DOFs*(self.input_len+2)+1]
+            M = torch.reshape(self.dataset[idt:idt+self.sequence_len, self.n_DOFs*(self.input_len+2)+1:], (self.sequence_len,self.n_DOFs, self.n_DOFs))
         else :
+            return self.__getitem__(idt+self.sequence_len - time_len)
             x = torch.from_numpy(np.zeros((self.sequence_len,self.n_DOFs*self.input_len))).float()
             y = torch.from_numpy(np.zeros((self.sequence_len,self.n_DOFs))).float()
+            C = torch.from_numpy(np.zeros((self.sequence_len,self.n_DOFs))).float()
+            M = torch.randn(self.sequence_len, self.n_DOFs, self.n_DOFs)
 
-        if self.norm:
-            sample = {'input': (x-self.mean)/self.std, 'label': y}
-        else:
-            sample = {'input': x, 'label': y}
-        return sample['input'], sample['label']
+        return x,y, C,M

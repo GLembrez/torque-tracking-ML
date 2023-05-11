@@ -21,16 +21,20 @@ def parse(args):
     sampledTime = logtime[::samplingStep]
     tauIn = np.zeros((n_DOFs,len(sampledTime)))
     cmdTau = np.zeros((n_DOFs,len(sampledTime)))
-    qIn = np.zeros((n_DOFs,len(sampledTime)))
     qIn_diff = np.zeros((n_DOFs,len(sampledTime)))
-    M = np.zeros((len(sampledTime),n_DOFs, n_DOFs))
+    M = np.zeros((n_DOFs, n_DOFs,len(sampledTime)))
+    C = np.zeros((n_DOFs, len(sampledTime)))
 
-    for jId in range(n_DOFs) :
+    for jId1 in range(n_DOFs) :
 
-        tauIn[jId,:] = log['tauIn_' + repr(jId)][::samplingStep] + np.random.normal(0,0.2, size = len(sampledTime))
-        cmdTau[jId,:] = log['cmdTau_' + repr(jId)][::samplingStep] + np.random.normal(0,0.2, size = len(sampledTime))
-        qIn[jId,:] = log['qIn_' + repr(jId)][::samplingStep] + np.random.normal(0,0.01, size = len(sampledTime))
-        qIn_diff[jId,:] = log['alphaIn_' + repr(jId)][::samplingStep] + np.random.normal(0,0.01, size = len(sampledTime))
+        tauIn[jId1,:] = log['tauIn_' + repr(jId1)][::samplingStep] # + np.random.normal(0,0.2, size = len(sampledTime))
+        cmdTau[jId1,:] = log['cmdTau_' + repr(jId1)][::samplingStep] # + np.random.normal(0,0.2, size = len(sampledTime))
+        qIn_diff[jId1,:] = log['alphaIn_' + repr(jId1)][::samplingStep] # + np.random.normal(0,0.01, size = len(sampledTime))
+        C[jId1,:] = log['C_'+repr(jId1)][::samplingStep]
+
+        for jId2 in range(n_DOFs) :
+
+            M[jId1,jId2,:] = log['M_'+repr(jId1)+repr(jId2)][::samplingStep]
 
 
     
@@ -47,11 +51,15 @@ def parse(args):
         qDot   =    qIn_diff[:,i] 
         tauRef =    cmdTau[:,i] 
         error  =    cmdTau[:,i] - tauIn[:,i]  
+        c      =    C[:,i]
+        mass   =    np.reshape(M[:,:,i],(49,))
 
         outline =       repr(t)      + \
                 ',' + ','.join(map(str, qDot))   + \
                 ',' + ','.join(map(str, tauRef)) + \
-                ',' + ','.join(map(str, error))
+                ',' + ','.join(map(str, error)) + \
+                ',' + ','.join(map(str, c)) + \
+                ',' + ','.join(map(str, mass))
 
         with open(args.out, 'a') as f:
             f.write(outline + '\n')

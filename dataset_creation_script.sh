@@ -3,7 +3,7 @@
 
 ## Generate train dataset
 
-for i in {1..10} ;
+for i in {1..5} ;
     do (mc_mujoco --torque-control --without-visualization) & sleep 30 ; kill $! ;
 done ;
 
@@ -21,7 +21,7 @@ done ;
 
 ## Generate validation dataset
 
-for i in {1..5} ;
+for i in {1..2} ;
     do (mc_mujoco --torque-control --without-visualization) & sleep 10 ; kill $! ;
 done ;
 
@@ -39,4 +39,16 @@ done ;
 
 ## train
 
-python /home/gabinlembrez/GitHub/torque-tracking-ML/LSTM/Kinova/train.py --dataset /home/gabinlembrez/GitHub/torque-tracking-ML/data/Kinova --batch_size 64 --outdir /home/gabinlembrez/trained_nets/Kinova_multivariate_v1/ --epochs 100
+python /home/gabinlembrez/GitHub/torque-tracking-ML/LSTM/Kinova/train.py --dataset /home/gabinlembrez/data/Kinova --batch_size 64 --outdir /home/gabinlembrez/trained_nets/Kinova_multivariate_v3/ --epochs 100
+
+
+## Validation on real data
+
+rm /home/gabinlembrez/data/Kinova/real.txt ;
+V=$(find ~/Torque_tracking_logs/Kinova/real -name *.bin);
+for b in $V;
+    do echo $b; 
+    python /home/gabinlembrez/GitHub/torque-tracking-ML/LSTM/Kinova/data_extractor.py --logpath $b --out /home/gabinlembrez/data/Kinova/real.txt --append ; 
+done ;
+
+python /home/gabinlembrez/GitHub/torque-tracking-ML/LSTM/Kinova/predict.py --model /home/gabinlembrez/trained_nets/Kinova_multivariate_v3/trained_50.model --dataset /home/gabinlembrez/data/Kinova/real.txt --visualize

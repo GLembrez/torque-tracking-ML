@@ -7,6 +7,7 @@ import torch
 from torch.utils.data import DataLoader
 from matplotlib import pyplot as plt
 
+from progress.bar import Bar
 
 from net import LSTM
 from data_loader import TorqueTrackingDataset
@@ -15,10 +16,12 @@ from data_loader import TorqueTrackingDataset
 
 n_DOFs = 7
 input_len = 2
-sequence_len = 20
+sequence_len = 10
 num_layers = 3
 hidden_size = 64
-epsilon = 5*1e-3 # threshold on the improvement of the valid loss
+epsilon = 5*1e-3        # threshold on the improvement of the valid loss
+dt = 5*1e-3             # simulation time step x sampling rate
+regularization = 0.5     # loss regularization parameter
 
 ###################################################################
 
@@ -26,34 +29,54 @@ epsilon = 5*1e-3 # threshold on the improvement of the valid loss
 def train(net, train_data, criterion, optimizer):
     net.train()
     losses = []
+    tbar = Bar('Training', max=len(train_data))
+    for inputs, targets, C, M in train_data:
 
-    for inputs, targets in train_data:
+        batch_size = inputs.size(dim=0)
+        M_inv = torch.inverse(M.cuda())
+        C = C.cuda()
         inputs  = torch.autograd.Variable(inputs.cuda())
         targets = torch.autograd.Variable(targets.cuda())
-        
-        batch_size = inputs.size(0)
+        alpha_r = torch.diff(inputs[:,:,:n_DOFs], n=1, dim=1)
+        alpha_p = torch.zeros(batch_size,sequence_len-1,n_DOFs).cuda()
         out = net(inputs)
-        loss = criterion(out, targets.view(-1, n_DOFs))
-
-
+        friction_estimation = out.reshape(batch_size, sequence_len, n_DOFs)
+        for t in range(sequence_len-1):
+            alpha_p[:,t,:,None] = dt * torch.matmul(M_inv[:,t,:,:],(inputs[:,t,n_DOFs:,None]-friction_estimation[:,t,:,None]-C[:,t,:,None]))
+        dv = alpha_r-alpha_p
+        loss =  (1-regularization) * criterion(out, targets.view(-1, n_DOFs)) + regularization * torch.mean(torch.matmul(dv[:,:,None,:],torch.matmul(M.cuda()[:,:-1,:,:],dv[:,:,:,None]))) 
 
         losses.append(loss.data)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        tbar.next()
     return sum(losses)/len(losses)
 
 @torch.no_grad()
 def valid(net, valid_data, criterion):
     net.eval()
     error = []
-    with torch.no_grad():
-        for inputs, targets in valid_data:
-            inputs = torch.autograd.Variable(inputs.cuda())
+    ebar = Bar('Evaluating', max=len(valid_data))
+    with torch.no_grad() :
+        for inputs, targets, C, M in valid_data:
+
+            batch_size = inputs.size(dim=0)
+            M_inv = torch.inverse(M.cuda())
+            C = C.cuda()
+            inputs  = torch.autograd.Variable(inputs.cuda())
             targets = torch.autograd.Variable(targets.cuda())
-            batch_size = inputs.size(0)
+            alpha_r = torch.diff(inputs[:,:,:n_DOFs], n=1, dim=1)
+            alpha_p = torch.zeros(batch_size,sequence_len-1,n_DOFs).cuda()
             out = net(inputs)
-            error.append(criterion(out, targets.view(-1, n_DOFs)).data)
+            friction_estimation = out.reshape(batch_size, sequence_len, n_DOFs)
+            for t in range(sequence_len-1):
+                alpha_p[:,t,:,None] = dt * torch.matmul(M_inv[:,t,:,:],(inputs[:,t,n_DOFs:,None]-friction_estimation[:,t,:,None]-C[:,t,:,None]))
+            dv = alpha_r-alpha_p
+            #### replace sum with mean ?
+            loss = (1-regularization)* criterion(out, targets.view(-1, n_DOFs)) + regularization * torch.mean(torch.matmul(dv[:,:,None,:],torch.matmul(M.cuda()[:,:-1,:,:],dv[:,:,:,None]))) 
+            ebar.next()
+            error.append(loss.data)
     return sum(error)/len(error)
 
 def main():
@@ -113,15 +136,16 @@ def main():
     ncpus = os.cpu_count()
     # Set train and valid dataloaders
     train_set = TorqueTrackingDataset(input_len,n_DOFs,sequence_len, os.path.join(args.dataset, 'train.txt'), is_train=True)
-    train_data = DataLoader(train_set, batch_size=args.batch_size, shuffle=True, num_workers=ncpus, drop_last=True)
+    train_data = DataLoader(train_set, batch_size=args.batch_size, shuffle=False, num_workers=ncpus, drop_last=True)
     logging.info("train data: %d batches of batch size %d", len(train_data), args.batch_size)
 
     meanstd = {'mean': train_set.mean, 'std':train_set.std}
     valid_set = TorqueTrackingDataset(input_len,n_DOFs, sequence_len, os.path.join(args.dataset, 'valid.txt'), meanstd, is_train=False)
-    valid_data = DataLoader(valid_set, batch_size=args.batch_size, shuffle=True, num_workers=ncpus, drop_last=True)
+    valid_data = DataLoader(valid_set, batch_size=args.batch_size, shuffle=False, num_workers=ncpus, drop_last=True)
     logging.info("valid data: %d batches of batch size %d", len(valid_data), args.batch_size)
 
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99)
+
 
     for epoch in range(args.epochs):
         if args.outdir and epoch%args.checkpoint==0:
@@ -137,34 +161,23 @@ def main():
                      optimizer.param_groups[0]['lr'])
         if epoch%10==0:
             lr_scheduler.step()
+        if epoch>0 and (abs(log_valid_loss[epoch]-log_valid_loss[epoch-1])<epsilon or epoch==args.epochs-1):
+            torch.save(net.state_dict(), os.path.join(args.outdir, "trained.model"))
+            torch.save(net, os.path.join(args.outdir, "trained.pth"))
 
-        # if epoch>0 and abs(log_valid_loss[epoch]-log_valid_loss[epoch-1])<epsilon:
-        #     torch.save(net.state_dict(), os.path.join(args.outdir, "trained.model"))
-        #     torch.save(net, os.path.join(args.outdir, "trained.pth"))
+            fig = plt.figure()
+            plt.plot(log_train_loss,color='teal',linewidth=2,label='Train Loss')
+            plt.plot(log_valid_loss,color='lightsalmon',linewidth=2,label='Valid Loss')
+            plt.legend()
+            plt.xlabel('epoch')
+            plt.ylabel('MSE loss')
+            plt.title('Model training performances')
+            plt.savefig('training_overview.png')
 
-        #     fig = plt.figure()
-        #     plt.plot(log_train_loss,color='teal',linewidth=2,label='Train Loss')
-        #     plt.plot(log_valid_loss,color='lightsalmon',linewidth=2,label='Valid Loss')
-        #     plt.legend()
-        #     plt.xlabel('epoch')
-        #     plt.ylabel('MSE loss')
-        #     plt.title('Model training performances')
-        #     plt.show()
+            print(epoch)
+            return
 
-        #     print(epoch)
-        #     return
-
-    torch.save(net.state_dict(), os.path.join(args.outdir, "trained.model"))
-    torch.save(net, os.path.join(args.outdir, "trained.pth"))
-
-    fig = plt.figure()
-    plt.plot(log_train_loss,color='teal',linewidth=2,label='Train Loss')
-    plt.plot(log_valid_loss,color='lightsalmon',linewidth=2,label='Valid Loss')
-    plt.legend()
-    plt.xlabel('epoch')
-    plt.ylabel('MSE loss')
-    plt.title('Model training performances')
-    plt.show()
+    
 
 if __name__=='__main__':
     main()

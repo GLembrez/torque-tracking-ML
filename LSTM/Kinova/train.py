@@ -15,13 +15,14 @@ from data_loader import TorqueTrackingDataset
 ####################### HYPERPARAMETERS ###########################
 
 n_DOFs = 7
-input_len = 2
-sequence_len = 10
-num_layers = 3
+input_len = 3
+sequence_len = 30
+num_layers = 2
 hidden_size = 64
-epsilon = 5*1e-3        # threshold on the improvement of the valid loss
+epsilon = 1e-3          # threshold on the improvement of the valid loss
 dt = 5*1e-3             # simulation time step x sampling rate
-regularization = 0.5     # loss regularization parameter
+regularization = 0.98      # loss regularization parameter
+W = torch.diag(torch.tensor([5,10,10,5,1,1,0.1]))
 
 ###################################################################
 
@@ -37,14 +38,18 @@ def train(net, train_data, criterion, optimizer):
         C = C.cuda()
         inputs  = torch.autograd.Variable(inputs.cuda())
         targets = torch.autograd.Variable(targets.cuda())
-        alpha_r = torch.diff(inputs[:,:,:n_DOFs], n=1, dim=1)
-        alpha_p = torch.zeros(batch_size,sequence_len-1,n_DOFs).cuda()
+        #alpha_r = torch.diff(inputs[:,:,:n_DOFs], n=1, dim=1)
+        alpha_r = inputs.clone()[:,:,n_DOFs:2*n_DOFs]
+        #alpha_p = torch.zeros(batch_size,sequence_len-1,n_DOFs).cuda()
+        alpha_p = inputs.clone()[:,:,n_DOFs:2*n_DOFs]
         out = net(inputs)
         friction_estimation = out.reshape(batch_size, sequence_len, n_DOFs)
-        for t in range(sequence_len-1):
-            alpha_p[:,t,:,None] = dt * torch.matmul(M_inv[:,t,:,:],(inputs[:,t,n_DOFs:,None]-friction_estimation[:,t,:,None]-C[:,t,:,None]))
+        for t in range(1,sequence_len):
+            alpha_p[:,t,:,None] = alpha_p[:,t-1,:,None] + dt * torch.matmul(M_inv[:,t,:,:],(inputs[:,t,2*n_DOFs:,None]-friction_estimation[:,t,:,None]-C[:,t,:,None]))
         dv = alpha_r-alpha_p
-        loss =  (1-regularization) * criterion(out, targets.view(-1, n_DOFs)) + regularization * torch.mean(torch.matmul(dv[:,:,None,:],torch.matmul(M.cuda()[:,:-1,:,:],dv[:,:,:,None]))) 
+        torque_loss = criterion(out, targets.view(-1, n_DOFs))
+        velocity_loss = torch.mean(torch.matmul(dv[:,:,None,:],torch.matmul(M.cuda(),dv[:,:,:,None]))) 
+        loss =  (1-regularization) * torque_loss + regularization * velocity_loss
 
         losses.append(loss.data)
         optimizer.zero_grad()
@@ -66,15 +71,15 @@ def valid(net, valid_data, criterion):
             C = C.cuda()
             inputs  = torch.autograd.Variable(inputs.cuda())
             targets = torch.autograd.Variable(targets.cuda())
-            alpha_r = torch.diff(inputs[:,:,:n_DOFs], n=1, dim=1)
-            alpha_p = torch.zeros(batch_size,sequence_len-1,n_DOFs).cuda()
+            alpha_r = inputs.clone()[:,:,n_DOFs:2*n_DOFs]
+            alpha_p = inputs.clone()[:,:,n_DOFs:2*n_DOFs]
             out = net(inputs)
             friction_estimation = out.reshape(batch_size, sequence_len, n_DOFs)
-            for t in range(sequence_len-1):
-                alpha_p[:,t,:,None] = dt * torch.matmul(M_inv[:,t,:,:],(inputs[:,t,n_DOFs:,None]-friction_estimation[:,t,:,None]-C[:,t,:,None]))
+            for t in range(1,sequence_len):
+                alpha_p[:,t,:,None] = alpha_p[:,t-1,:,None] + dt * torch.matmul(M_inv[:,t,:,:],(inputs[:,t,2*n_DOFs:,None]-friction_estimation[:,t,:,None]-C[:,t,:,None]))
             dv = alpha_r-alpha_p
             #### replace sum with mean ?
-            loss = (1-regularization)* criterion(out, targets.view(-1, n_DOFs)) + regularization * torch.mean(torch.matmul(dv[:,:,None,:],torch.matmul(M.cuda()[:,:-1,:,:],dv[:,:,:,None]))) 
+            loss = (1-regularization)* criterion(out, targets.view(-1, n_DOFs)) + regularization * torch.mean(torch.matmul(dv[:,:,None,:],torch.matmul(M.cuda(),dv[:,:,:,None]))) 
             ebar.next()
             error.append(loss.data)
     return sum(error)/len(error)
@@ -88,6 +93,7 @@ def main():
     ap.add_argument("-e", "--epochs", required=False, default=100, type=int)
     ap.add_argument("-d", "--dataset", required=True)
     ap.add_argument("-c", "--checkpoint", required=False, default=50, type=int)
+    ap.add_argument("-m", "--model", required=False, default=None)
     ap.add_argument("--batch_size", required=False, default=8, type=int)
     ap.add_argument("--rate", required=False, default=1e-4, type=float)
     args = ap.parse_args()
@@ -127,6 +133,10 @@ def main():
     # Set network model, loss criterion and optimizer
     net = LSTM(num_features=n_DOFs, input_size=input_len*n_DOFs, hidden_size=hidden_size, num_layers=num_layers, seq_length=sequence_len)
     net = torch.nn.DataParallel(net).cuda()
+    if not args.model == None :
+        net.load_state_dict(torch.load(args.model))
+        print("loaded trained model")
+    print("number of trainable parameters", sum(p.numel() for p in net.parameters() if p.requires_grad))
     criterion = torch.nn.MSELoss().cuda()
     optimizer = torch.optim.Adam(net.parameters(), lr=args.rate)
     logging.info(repr(optimizer))
@@ -136,12 +146,12 @@ def main():
     ncpus = os.cpu_count()
     # Set train and valid dataloaders
     train_set = TorqueTrackingDataset(input_len,n_DOFs,sequence_len, os.path.join(args.dataset, 'train.txt'), is_train=True)
-    train_data = DataLoader(train_set, batch_size=args.batch_size, shuffle=False, num_workers=ncpus, drop_last=True)
+    train_data = DataLoader(train_set, batch_size=args.batch_size, shuffle=True, num_workers=ncpus, drop_last=True)
     logging.info("train data: %d batches of batch size %d", len(train_data), args.batch_size)
 
     meanstd = {'mean': train_set.mean, 'std':train_set.std}
     valid_set = TorqueTrackingDataset(input_len,n_DOFs, sequence_len, os.path.join(args.dataset, 'valid.txt'), meanstd, is_train=False)
-    valid_data = DataLoader(valid_set, batch_size=args.batch_size, shuffle=False, num_workers=ncpus, drop_last=True)
+    valid_data = DataLoader(valid_set, batch_size=args.batch_size, shuffle=True, num_workers=ncpus, drop_last=True)
     logging.info("valid data: %d batches of batch size %d", len(valid_data), args.batch_size)
 
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99)

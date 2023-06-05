@@ -22,11 +22,13 @@ def parse(args):
     tauIn = np.zeros((n_DOFs,len(sampledTime)))
     cmdTau = np.zeros((n_DOFs,len(sampledTime)))
     qIn_diff = np.zeros((n_DOFs,len(sampledTime)))
+    qIn = np.zeros((n_DOFs, len(sampledTime)))
     M = np.zeros((n_DOFs, n_DOFs,len(sampledTime)))
     C = np.zeros((n_DOFs, len(sampledTime)))
 
     for jId1 in range(n_DOFs) :
 
+        qIn[jId1,:] = log['qIn_'+repr(jId1)][::samplingStep]
         tauIn[jId1,:] = log['tauIn_' + repr(jId1)][::samplingStep] # + np.random.normal(0,0.2, size = len(sampledTime))
         cmdTau[jId1,:] = log['cmdTau_' + repr(jId1)][::samplingStep] # + np.random.normal(0,0.2, size = len(sampledTime))
         qIn_diff[jId1,:] = log['alphaIn_' + repr(jId1)][::samplingStep] # + np.random.normal(0,0.01, size = len(sampledTime))
@@ -40,6 +42,7 @@ def parse(args):
     
     for i in range(len(sampledTime)) :
 
+        q = np.zeros(n_DOFs)
         qDot = np.zeros(n_DOFs)
         tauRef = np.zeros(n_DOFs)
         error = np.zeros(n_DOFs)
@@ -48,6 +51,7 @@ def parse(args):
         
 
         t      =    sampledTime[i]
+        q      =    qIn[:,i]
         qDot   =    qIn_diff[:,i] 
         tauRef =    cmdTau[:,i] 
         error  =    cmdTau[:,i] - tauIn[:,i]  
@@ -55,6 +59,7 @@ def parse(args):
         mass   =    np.reshape(M[:,:,i],(49,))
 
         outline =       repr(t)      + \
+                ',' + ','.join(map(str, q))   + \
                 ',' + ','.join(map(str, qDot))   + \
                 ',' + ','.join(map(str, tauRef)) + \
                 ',' + ','.join(map(str, error)) + \

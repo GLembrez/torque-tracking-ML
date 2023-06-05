@@ -6,7 +6,7 @@ from scipy.optimize import least_squares as lsq
 
 
 
-log = mc_log_ui.read_log('/home/gabinlembrez/Torque_tracking_logs/Kinova/real_random_sample_v3.bin')
+log = mc_log_ui.read_log('/home/gabinlembrez/Torque_tracking_logs/Kinova/real/no_load.bin')
 T           = log["t"]
 
 

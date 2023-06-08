@@ -21,7 +21,7 @@ num_layers = 2
 hidden_size = 64
 epsilon = 1e-3          # threshold on the improvement of the valid loss
 dt = 5*1e-3             # simulation time step x sampling rate
-regularization = 0.98      # loss regularization parameter
+regularization = 0      # loss regularization parameter
 W = torch.diag(torch.tensor([5,10,10,5,1,1,0.1]))
 
 ###################################################################
@@ -33,23 +33,21 @@ def train(net, train_data, criterion, optimizer):
     tbar = Bar('Training', max=len(train_data))
     for inputs, targets, C, M in train_data:
 
-        batch_size = inputs.size(dim=0)
-        M_inv = torch.inverse(M.cuda())
-        C = C.cuda()
+        # batch_size = inputs.size(dim=0)
+        # M_inv = torch.inverse(M.cuda())
+        # C = C.cuda()
         inputs  = torch.autograd.Variable(inputs.cuda())
         targets = torch.autograd.Variable(targets.cuda())
-        #alpha_r = torch.diff(inputs[:,:,:n_DOFs], n=1, dim=1)
-        alpha_r = inputs.clone()[:,:,n_DOFs:2*n_DOFs]
-        #alpha_p = torch.zeros(batch_size,sequence_len-1,n_DOFs).cuda()
-        alpha_p = inputs.clone()[:,:,n_DOFs:2*n_DOFs]
+        # alpha_r = inputs.clone()[:,:,n_DOFs:2*n_DOFs]
+        # alpha_p = inputs.clone()[:,:,n_DOFs:2*n_DOFs]
         out = net(inputs)
-        friction_estimation = out.reshape(batch_size, sequence_len, n_DOFs)
-        for t in range(1,sequence_len):
-            alpha_p[:,t,:,None] = alpha_p[:,t-1,:,None] + dt * torch.matmul(M_inv[:,t,:,:],(inputs[:,t,2*n_DOFs:,None]-friction_estimation[:,t,:,None]-C[:,t,:,None]))
-        dv = alpha_r-alpha_p
+        # friction_estimation = out.reshape(batch_size, sequence_len, n_DOFs)
+        # for t in range(1,sequence_len):
+        #     alpha_p[:,t,:,None] = alpha_p[:,t-1,:,None] + dt * torch.matmul(M_inv[:,t,:,:],(inputs[:,t,2*n_DOFs:,None]-friction_estimation[:,t,:,None]-C[:,t,:,None]))
+        # dv = alpha_r-alpha_p
         torque_loss = criterion(out, targets.view(-1, n_DOFs))
-        velocity_loss = torch.mean(torch.matmul(dv[:,:,None,:],torch.matmul(M.cuda(),dv[:,:,:,None]))) 
-        loss =  (1-regularization) * torque_loss + regularization * velocity_loss
+        # velocity_loss = torch.mean(torch.matmul(dv[:,:,None,:],torch.matmul(M.cuda(),dv[:,:,:,None]))) 
+        loss =  (1-regularization) * torque_loss #+ regularization * velocity_loss
 
         losses.append(loss.data)
         optimizer.zero_grad()
@@ -66,20 +64,19 @@ def valid(net, valid_data, criterion):
     with torch.no_grad() :
         for inputs, targets, C, M in valid_data:
 
-            batch_size = inputs.size(dim=0)
-            M_inv = torch.inverse(M.cuda())
-            C = C.cuda()
+            # batch_size = inputs.size(dim=0)
+            # M_inv = torch.inverse(M.cuda())
+            # C = C.cuda()
             inputs  = torch.autograd.Variable(inputs.cuda())
             targets = torch.autograd.Variable(targets.cuda())
-            alpha_r = inputs.clone()[:,:,n_DOFs:2*n_DOFs]
-            alpha_p = inputs.clone()[:,:,n_DOFs:2*n_DOFs]
+            # alpha_r = inputs.clone()[:,:,n_DOFs:2*n_DOFs]
+            # alpha_p = inputs.clone()[:,:,n_DOFs:2*n_DOFs]
             out = net(inputs)
-            friction_estimation = out.reshape(batch_size, sequence_len, n_DOFs)
-            for t in range(1,sequence_len):
-                alpha_p[:,t,:,None] = alpha_p[:,t-1,:,None] + dt * torch.matmul(M_inv[:,t,:,:],(inputs[:,t,2*n_DOFs:,None]-friction_estimation[:,t,:,None]-C[:,t,:,None]))
-            dv = alpha_r-alpha_p
-            #### replace sum with mean ?
-            loss = (1-regularization)* criterion(out, targets.view(-1, n_DOFs)) + regularization * torch.mean(torch.matmul(dv[:,:,None,:],torch.matmul(M.cuda(),dv[:,:,:,None]))) 
+            # friction_estimation = out.reshape(batch_size, sequence_len, n_DOFs)
+            # for t in range(1,sequence_len):
+            #     alpha_p[:,t,:,None] = alpha_p[:,t-1,:,None] + dt * torch.matmul(M_inv[:,t,:,:],(inputs[:,t,2*n_DOFs:,None]-friction_estimation[:,t,:,None]-C[:,t,:,None]))
+            # dv = alpha_r-alpha_p
+            loss = (1-regularization)* criterion(out, targets.view(-1, n_DOFs)) # + regularization * torch.mean(torch.matmul(dv[:,:,None,:],torch.matmul(M.cuda(),dv[:,:,:,None]))) 
             ebar.next()
             error.append(loss.data)
     return sum(error)/len(error)

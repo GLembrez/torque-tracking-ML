@@ -2,7 +2,7 @@ import os
 import random
 import argparse
 import numpy as np
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -84,18 +84,29 @@ def get_predictions(args):
     fig = plt.figure()
     for i in range(7) : 
         ax1 = fig.add_subplot(7,1,1+i)
-        ax1.set_title("joint {}".format(i+1))
+        ax1.set_ylabel("DOF {}".format(i+1),fontsize=12, fontweight = 'bold')
         ax1.plot([0.001*t for t in range(T-sequence_len-1)], output_list[i], color = 'teal', label = 'prediction', linewidth=0.7)
         ax1.plot([0.001*t for t in range(T-sequence_len-1)], targets_list[i], color = 'lightsalmon', label = 'target', linewidth=0.7)
-        plt.legend()
+        plt.legend(fontsize=12)
+    ax1.set_xlabel("time [s]",fontsize=12, fontweight = 'bold')
+    fig.tight_layout()
 
     
-    for i in range(7) : 
-        fig = plt.figure()
-        plt.title("joint {}".format(i+1))
-        plt.plot(alpha_list[i], targets_list[i],'.', markersize=0.3, color = 'teal', label = 'torque error', linewidth=0.7)
-        plt.plot(alpha_list[i], output_list[i],'.', markersize=0.3, color = 'lightsalmon', label = 'prediction', linewidth=0.7)
-        plt.legend()
+    # for i in range(7) : 
+    #     fig = plt.figure()
+    #     plt.title("joint {}".format(i+1))
+    #     plt.plot(alpha_list[i], targets_list[i],'.', markersize=0.3, color = 'teal', label = 'torque error', linewidth=0.7)
+    #     plt.plot(alpha_list[i], output_list[i],'.', markersize=0.3, color = 'lightsalmon', label = 'prediction', linewidth=0.7)
+    #     plt.legend()
+
+    # for i in range(7):
+    #     plt.figure()
+    #     plt.plot(alpha_list[i], targets_list[i],'.', markersize=0.3, color = 'teal', linewidth=0.7)
+    #     plt.plot(alpha_list[i], output_list[i],'.', markersize=0.3, color = 'lightsalmon', linewidth=0.7)
+    #     plt.xlabel("rotation velocity [m/s]", fontsize=12, fontweight = 'bold' )
+    #     plt.ylabel("joint torque [Nm]", fontsize=12, fontweight = 'bold' )
+    #     plt.grid(linewidth = 0.5)
+    #     plt.title("DOF "+str(i+1))
     plt.show()
 
 

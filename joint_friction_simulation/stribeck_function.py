@@ -65,41 +65,52 @@ def Stribeck(x,K,B,Fs,Fc,vs,D,t):
         return (gamma*x**2+alpha*x+beta)/(x+delta)
 
 
+def Coulomb(x) :
+
+    if x>0 : 
+        return 2.1
+    else : 
+        return -2.1
+
 x = np.linspace(-0.4,0.4,1000)
 ## Hyperparameters ##
 
 
-for i in range(10) :
-    K = 5000
-    B = 50  
-    Fs = 2.5  
-    Fc = 0.2      
-    vs = 0.04      
-    D = 4.5
-    t = 0.001  
-    y = [friction(i,K,B,Fs,Fc,vs,D,t) for i in x]
-    y_Stribeck = [Stribeck(i,K,B,Fs,Fc,vs,D,t) for i in x]
-    fig_1 = plt.figure()
-    ax1 = fig_1.add_subplot(121)
-    ax1.plot(x,y_Stribeck,color = 'lightsalmon',label='Stribeck friction function',linewidth=2)
-    ax1.plot(x,y,color = 'teal', label='Implicit transform',linewidth=2)
-    K = 1000 + rand()*9000  
-    B = 10 + rand()*90    
-    Fs = 1 + rand()*5
-    Fc = rand()*Fs       
-    vs = 0.01 + rand()*0.1  
-    D = rand()*10
-    t = 0.001  
-    y = [friction(i,K,B,Fs,Fc,vs,D,t) for i in x]
-    y_Stribeck = [Stribeck(i,K,B,Fs,Fc,vs,D,t) for i in x]
-    ax2 = fig_1.add_subplot(122)
-    ax2.plot(x,y_Stribeck,color = 'lightsalmon',label='Stribeck friction function',linewidth=2)
-    ax2.plot(x,y,color = 'teal', label='Implicit transform',linewidth=2)
-    # plt.xlabel(r'$v$ / $v^*$ [rad/s]',fontsize=18)
-    # plt.ylabel(r'f [Nm]',fontsize=18)
-    # plt.legend(fontsize=18)
-    # plt.grid(linewidth=0.5)
-    plt.show()
+# for i in range(10) :
+K = 5000
+B = 50  
+Fs = 2.5  
+Fc = 0.2      
+vs = 0.04      
+D = 4.5
+t = 0.001  
+y = [friction(i,K,B,Fs,Fc,vs,D,t) for i in x]
+y_Stribeck = [Stribeck(i,K,B,Fs,Fc,vs,D,t) for i in x]
+y_Coulomb = [Coulomb(i) for i in x]
+fig = plt.figure()
+plt.plot(x,y_Stribeck,color = 'teal',label='Stribeck friction function',linewidth=2)
+plt.xlabel("rotation velocity [rad/s]", fontsize = 12, fontweight = 'bold')
+plt.ylabel("joint torque [Nm]", fontsize = 12, fontweight = 'bold')
+plt.ylim([-3,3])
+plt.grid(linewidth=0.5)
+    # plt.plot(x,y,color = 'teal', label='Implicit transform',linewidth=2)
+    # K = 1000 + rand()*9000  
+    # B = 10 + rand()*90    
+    # Fs = 1 + rand()*5
+    # Fc = rand()*Fs       
+    # vs = 0.01 + rand()*0.1  
+    # D = rand()*10
+    # t = 0.001  
+    # y = [friction(i,K,B,Fs,Fc,vs,D,t) for i in x]
+    # y_Stribeck = [Stribeck(i,K,B,Fs,Fc,vs,D,t) for i in x]
+    # ax2 = fig_1.add_subplot(122)
+    # ax2.plot(x,y_Stribeck,color = 'lightsalmon',label='Stribeck friction function',linewidth=2)
+    # ax2.plot(x,y,color = 'teal', label='Implicit transform',linewidth=2)
+    # # plt.xlabel(r'$v$ / $v^*$ [rad/s]',fontsize=18)
+    # # plt.ylabel(r'f [Nm]',fontsize=18)
+    # # plt.legend(fontsize=18)
+    # # plt.grid(linewidth=0.5)
+plt.show()
 
 # figK = plt.figure()
 # D = np.linspace(0,20,20)

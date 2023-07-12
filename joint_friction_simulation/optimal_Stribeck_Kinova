@@ -55,10 +55,22 @@ def F(x,i) :
         f[t] = (tauOut[i,t]-tauIn[i,t]) - fStribeck(alphaOut[i,t],x)
     return f
 
-X = np.zeros((7,6))
-for i in range(7) :
-    X0 = np.array([5000,50,2.5,0.2,0.04,4.5])
-    solver = lsq(F,X0,bounds = ([0,np.inf]) ,ftol=1e-4,gtol=1e-4,xtol=1e-4,args=[i],verbose=2)
-    X[i,:] = solver.x
 
-print(X)
+friction = np.zeros([7,len(T)])
+groundTruth = np.zeros([7,len(T)])
+X = np.array([5000,50,2.5,0.2,0.04,4.5])
+for i in range(7) :
+    for t in range(len(T)) :
+        friction[i,t] = fStribeck(alphaOut[i,t],X)
+        groundTruth[i,t] = tauOut[i,t]-tauIn[i,t]
+
+
+fig = plt.figure()
+for i in range(7) :
+    ax = fig.add_subplot(7,1,i+1)
+    ax.set_ylabel("DOF "+str(i+1), fontsize=12, fontweight='bold')
+    ax.plot(T,groundTruth[i], color = "teal", linewidth=0.7, label = "Ground truth")
+    ax.plot(T,friction[i],color = 'lightsalmon', linewidth=1, label = "Stribeck model")
+    plt.legend()
+ax.set_xlabel("time [s]", fontsize=12, fontweight='bold')
+plt.show()

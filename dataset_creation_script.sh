@@ -4,7 +4,7 @@
 ## Generate train dataset
 
 for i in {1..20} ;
-    do (mc_mujoco --torque-control --without-visualization) & sleep 30 ; kill $! ;
+    do (mc_mujoco --torque-control --without-visualization) & sleep 400 ; kill $! ;
 done ;
 
 V=$(find /tmp -name *.bin -not -name "*latest.bin" 2>/dev/null);
@@ -15,28 +15,28 @@ done;
 V=$(find ~/Torque_tracking_logs/Kinova/train -name *.bin);
 for b in $V;
     do echo $b; 
-    python /home/gabinlembrez/GitHub/torque-tracking-ML/LSTM/Kinova/data_extractor.py --logpath $b --out /home/gabinlembrez/data/Kinova/train.txt --append ; 
+    python3 /home/gabinlembrez/GitHub/torque-tracking-ML/LSTM/Kinova/fixed_point_solver/data_extractor.py --logpath $b --out /home/gabinlembrez/data/Kinova/train.txt --append ; 
     rm $b
 done ;
 
 
 ## Generate validation dataset
 
-for i in {1..3} ;
-    do (mc_mujoco --torque-control --without-visualization) & sleep 20 ; kill $! ;
-done ;
+# for i in {1..3} ;
+#     do (mc_mujoco --torque-control --without-visualization) & sleep 20 ; kill $! ;
+# done ;
 
-V=$(find /tmp -name *.bin -not -name "*latest.bin" 2>/dev/null);
-for b in $V;
-    do mv $b /home/gabinlembrez/Torque_tracking_logs/Kinova/valid;
-done;
+# V=$(find /tmp -name *.bin -not -name "*latest.bin" 2>/dev/null);
+# for b in $V;
+#     do mv $b /home/gabinlembrez/Torque_tracking_logs/Kinova/valid;
+# done;
 
-V=$(find ~/Torque_tracking_logs/Kinova/valid -name *.bin);
-for b in $V;
-    do echo $b; 
-    python /home/gabinlembrez/GitHub/torque-tracking-ML/LSTM/Kinova/data_extractor.py --logpath $b --out /home/gabinlembrez/data/Kinova/valid.txt --append ; 
-    rm $b
-done ;
+# V=$(find ~/Torque_tracking_logs/Kinova/valid -name *.bin);
+# for b in $V;
+#     do echo $b; 
+#     python3 /home/gabinlembrez/GitHub/torque-tracking-ML/LSTM/Kinova/data_extractor.py --logpath $b --out /home/gabinlembrez/data/Kinova/valid.txt --append ; 
+#     rm $b
+# done ;
 
 # ## send data to remote pc
 
@@ -67,7 +67,7 @@ done ;
 
 ## train
 
-# python /home/gabinlembrez/GitHub/torque-tracking-ML/LSTM/Kinova/train.py --dataset /home/gabinlembrez/data/Kinova --batch_size 64 --outdir /home/gabinlembrez/trained_nets/Kinova_multivariate_v4/ --epochs 2
+# python3 /home/gabinlembrez/GitHub/torque-tracking-ML/LSTM/Kinova/train.py --dataset /home/gabinlembrez/data/Kinova --batch_size 64 --outdir /home/gabinlembrez/trained_nets/Kinova_multivariate_v4/ --epochs 2
 
 
 
@@ -77,7 +77,7 @@ done ;
 # V=$(find ~/Torque_tracking_logs/Kinova/real -name *.bin);
 # for b in $V;
 #     do echo $b; 
-#     python /home/gabinlembrez/GitHub/torque-tracking-ML/LSTM/Kinova/data_extractor.py --logpath $b --out /home/gabinlembrez/data/Kinova/real.txt --append ; 
+#     python3 /home/gabinlembrez/GitHub/torque-tracking-ML/LSTM/Kinova/data_extractor.py --logpath $b --out /home/gabinlembrez/data/Kinova/real.txt --append ; 
 # done ;
 
-# python /home/gabinlembrez/GitHub/torque-tracking-ML/LSTM/Kinova/predict.py --model /home/gabinlembrez/trained_nets/Kinova_multivariate_v3/trained.model --dataset /home/gabinlembrez/data/Kinova/real.txt --visualize
+# python3 /home/gabinlembrez/GitHub/torque-tracking-ML/LSTM/Kinova/predict.py --model /home/gabinlembrez/trained_nets/Kinova_multivariate_v3/trained.model --dataset /home/gabinlembrez/data/Kinova/real.txt --visualize

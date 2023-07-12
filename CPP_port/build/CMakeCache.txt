@@ -163,7 +163,7 @@ CMAKE_OBJCOPY:FILEPATH=/usr/bin/objcopy
 CMAKE_OBJDUMP:FILEPATH=/usr/bin/objdump
 
 //No help, variable specified on the command line.
-CMAKE_PREFIX_PATH:UNINITIALIZED=/home/gabinlembrez/trained_nets/cpp_export/libtorch_install/libtorch
+CMAKE_PREFIX_PATH:UNINITIALIZED=/home/gabinlembrez/GitHub/torque-tracking-ML/CPP_port/build/home/gabinlembrez/trained_nets/cpp_export/libtorch_install/libtorch
 
 //Value Computed by CMake
 CMAKE_PROJECT_DESCRIPTION:STATIC=
@@ -413,15 +413,6 @@ estimator_SOURCE_DIR:STATIC=/home/gabinlembrez/GitHub/torque-tracking-ML/CPP_por
 
 //Path to a library.
 kineto_LIBRARY:FILEPATH=/home/gabinlembrez/trained_nets/cpp_export/libtorch_install/libtorch/lib/libkineto.a
-
-//Value Computed by CMake
-regression_BINARY_DIR:STATIC=/home/gabinlembrez/GitHub/torque-tracking-ML/CPP_port/build
-
-//Value Computed by CMake
-regression_IS_TOP_LEVEL:STATIC=ON
-
-//Value Computed by CMake
-regression_SOURCE_DIR:STATIC=/home/gabinlembrez/GitHub/torque-tracking-ML/CPP_port
 
 
 ########################

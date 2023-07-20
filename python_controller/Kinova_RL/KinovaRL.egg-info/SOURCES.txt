@@ -1,0 +1,6 @@
+setup.py
+KinovaRL.egg-info/PKG-INFO
+KinovaRL.egg-info/SOURCES.txt
+KinovaRL.egg-info/dependency_links.txt
+KinovaRL.egg-info/requires.txt
+KinovaRL.egg-info/top_level.txt

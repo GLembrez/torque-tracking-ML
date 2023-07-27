@@ -13,6 +13,8 @@ class Friction():
         self.Fc     = np.zeros(7)       # Force required to continue motion
         self.dFs    = np.zeros(7)       # Coupling coefficient for effect of actuator torque
         self.dFc    = np.zeros(7)       # Coupling coefficient for effect of actuator torque
+        self.Fcgrav = np.zeros(7)       # Coupling coefficient for gravity torque
+        self.Fsgrav = np.zeros(7)       # Coupling coefficient for gravity torque 
         self.vs     = np.zeros(7)       # velocity when escaping stiction
         self.D      = np.zeros(7)       # coefficient for viscous friction
         self.dt     = 0.001             # simulation time step
@@ -48,67 +50,76 @@ class Friction():
         self.D = np.random.uniform(self.D_lim[0],self.D_lim[1],7) 
         self.dFs = np.random.uniform(self.dFs_lim[0],self.dFs_lim[1],7)
         self.dFc = np.random.uniform(self.dFc_lim[0],self.dFc_lim[1],7)
+        self.Z = 1/(self.dt*self.K + self.B)
 
     def compute(self,tau,e):
+        f = np.zeros(7)
+        for i in range(7):
+            f[i],e[i],_ = self.compute_joint(tau[i],e[i],i)
+        return f,e
+    
+
+    def compute_joint(self,tau,e,i):
         # computes friction using Stribeck model
         # tau is the actuator torque at the joints
         # v_rot is the rotation velocity of the joint
         # e is the velocity error due to friction
-        v_rot = self.data.qvel
-        f = np.zeros(7)
-        self.Z = 1/(self.dt*self.K + self.B)
-        self.v = v_rot + self.Z * self.K * e
-        Fs_coupled = self.Fs + np.abs(self.dFs*tau)
-        Fc_coupled = self.Fc + np.abs(self.dFc*tau)
-        alpha = self.D * self.vs + Fc_coupled
-        beta = Fs_coupled * self.vs
-        for i in range(7) :
-            if np.abs(self.v[i]) <= self.Z[i] * Fc_coupled[i]:
-                f[i] =  self.v[i]/self.Z[i]
-            else:
-                a = self.D[i]*self.Z[i]**2 + self.Z[i]
-                bp = -(self.v[i]+self.vs[i]+2*self.D[i]*self.Z[i]*self.v[i]+alpha[i]*self.Z[i])
-                bl = (-self.v[i]+self.vs[i]-2*self.D[i]*self.Z[i]*self.v[i]+alpha[i]*self.Z[i])
-                cp = self.D[i]*self.v[i]**2 + alpha[i]*self.v[i] + beta[i]
-                cl = self.D[i]*self.v[i]**2 - alpha[i]*self.v[i] + beta[i]
-                if self.v[i] > self.Z[i]*Fs_coupled[i]:
-                    f[i] = (-bp - np.sqrt(bp**2-4*a*cp))/(2*a) 
-                if self.v[i] < -self.Z[i]*Fs_coupled[i]:
-                    f[i] = (-bl + np.sqrt(bl**2-4*a*cl))/(2*a)
-        e = self.Z * (self.B * e + f * self.dt)
-        return f,e
+        # fixed_exists is a boolean 0 if fixed point does not exist
+        fixed_exists = True
+        c = self.data.qfrc_bias[i]
+        v_rot = self.data.qvel[i]
+        self.v[i] = v_rot + self.Z[i] * self.K[i] * e
+        f = 0
+        Fs_coupled = self.Fs[i] + np.abs(self.dFs[i]*(tau-c))
+        Fc_coupled = self.Fc[i] + np.abs(self.dFc[i]*(tau-c))
+        alpha = self.D[i] * self.vs[i] + Fc_coupled
+        beta = Fs_coupled * self.vs[i]
+        f = 0
+        if np.abs(self.v[i]) <= self.Z[i] * Fc_coupled:
+            f =  self.v[i]/self.Z[i]
+            fixed_exists = False
+        else:
+            a = self.D[i]*self.Z[i]**2 + self.Z[i]
+            bp = -(self.v[i]+self.vs[i]+2*self.D[i]*self.Z[i]*self.v[i]+alpha*self.Z[i])
+            bl = (-self.v[i]+self.vs[i]-2*self.D[i]*self.Z[i]*self.v[i]+alpha*self.Z[i])
+            cp = self.D[i]*self.v[i]**2 + alpha*self.v[i] + beta
+            cl = self.D[i]*self.v[i]**2 - alpha*self.v[i] + beta
+            if self.v[i] > self.Z[i]*Fs_coupled:
+                f = (-bp - np.sqrt(bp**2-4*a*cp))/(2*a) 
+            if self.v[i] < -self.Z[i]*Fs_coupled:
+                f = (-bl + np.sqrt(bl**2-4*a*cl))/(2*a)
+        e = self.Z[i] * (self.B[i] * e + f * self.dt)
+        return f,e,fixed_exists
+        
     
     def update(self,e,f):
         # stores friction and velocity error before computing fixed point
         self.e = e
         self.f = f
 
-    def evaluate(self,dtau):
-        tau = self.controller.cmd_tau
-        v_rot = self.data.qvel
-        f,_ = self.compute(tau+dtau,self.e)
-        return f-dtau
-    
+    def evaluate(self,dtau,i):
+        tau = self.controller.cmd_tau[i]
+        v_rot = self.data.qvel[i]
+        f,_,exists = self.compute_joint(tau+dtau,self.e[i],i)
+        return f-dtau,exists
+
+
     def find_fixed_point(self):
         # computes friction fixed point using Newton Raphson algorithm
-        tau = self.controller.cmd_tau
-        v_rot = self.data.qvel
-        n_iter = 0
-        tol = 1e-2
-        epsilon = 1e-3
-        lr = 2
-        J = np.zeros((7,7))
-        dtau = self.f.copy()
-        F = self.evaluate(dtau)
-        while np.linalg.norm(F)>tol and n_iter < 10 :   
-        # Newton Raphson loop
-            for i in range(7) :
-                dx = np.zeros(7)
-                dx[i] = epsilon
-                F_new = self.evaluate(dtau+dx)
-                J[:,i] = (F_new - F) / epsilon 
-                J[i,i] -= 1 
-            dtau -= lr * np.linalg.inv(J).dot(F)
-            F = self.evaluate(dtau)
-            n_iter += 1
-        self.fixed = dtau
+        for i in range(7):
+            n_iter = 0
+            tol = 1e-2
+            epsilon = 1e-6
+            lr = 2
+            grad = 0
+            dtau = self.f[i]
+            F,exists = self.evaluate(dtau,i)
+            if exists:
+                while np.abs(F)>tol and n_iter < 10 :   
+                # Newton Raphson loop
+                    F_new,_ = self.evaluate(dtau,i)
+                    grad =  (F_new - F) / epsilon  -1
+                    dtau -= lr * F/grad
+                    F = F_new
+                    n_iter += 1
+            self.fixed[i] = dtau

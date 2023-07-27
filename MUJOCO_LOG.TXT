@@ -19,3 +19,9 @@ WARNING: Nan, Inf or huge value in QACC at DOF 0. The simulation is unstable. Ti
 Fri Jul 14 15:54:03 2023
 WARNING: Nan, Inf or huge value in QACC at DOF 0. The simulation is unstable. Time = 2.5090.
 
+Fri Jul 21 11:08:45 2023
+WARNING: Nan, Inf or huge value in QACC at DOF 0. The simulation is unstable. Time = 0.1850.
+
+Fri Jul 21 14:10:10 2023
+ERROR: mjv_updateCamera: fixed camera id is outside valid range
+

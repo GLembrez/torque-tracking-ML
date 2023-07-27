@@ -22,16 +22,21 @@ class Controller():
 
         self.model = None
         self.data = None
-        self.randomize()
+        
 
     def register_model(self,model,data) :
         self.model = model  
         self.data = data
+        self.randomize()
         
     def randomize(self):
+        # 1 for continuous motion 2 for training
         self.q_s = self.q_f
+        # self.q_s = np.random.uniform(self.q_lims[:,0], self.q_lims[:,1], size=7) 
         self.q_f = np.random.uniform(self.q_lims[:,0], self.q_lims[:,1], size=7)
         self.t = 0
+        # self.data.qpos= self.q_s        # remove for continuous motion
+        # self.data.qvel= np.zeros(7)     # remove for continuous motion
 
     def input(self):
         q = self.data.qpos

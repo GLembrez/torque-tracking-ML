@@ -107,19 +107,19 @@ class Friction():
     def find_fixed_point(self):
         # computes friction fixed point using Newton Raphson algorithm
         for i in range(7):
+            exists = True
             n_iter = 0
             tol = 1e-2
             epsilon = 1e-6
-            lr = 2
+            lr = 1
             grad = 0
             dtau = self.f[i]
             F,exists = self.evaluate(dtau,i)
-            if exists:
-                while np.abs(F)>tol and n_iter < 10 :   
-                # Newton Raphson loop
-                    F_new,_ = self.evaluate(dtau,i)
-                    grad =  (F_new - F) / epsilon  -1
-                    dtau -= lr * F/grad
-                    F = F_new
-                    n_iter += 1
+            while np.abs(F)>tol and n_iter < 100: # and exists :   
+            # Newton Raphson loop
+                F_new,_ = self.evaluate(dtau,i)
+                grad =  (F_new - F) / epsilon  -1
+                dtau -= lr * F/grad
+                F,exists = self.evaluate(dtau,i)
+                n_iter += 1
             self.fixed[i] = dtau

@@ -1,6 +1,7 @@
 import mc_control
 import mc_rbdyn
 import mc_rtc
+import mc_tasks
 import numpy as np
 
 class McController(mc_control.MCPythonController):
@@ -8,6 +9,10 @@ class McController(mc_control.MCPythonController):
         self.qpsolver.addConstraintSet(self.dynamicsConstraint)
         self.qpsolver.addConstraintSet(self.contactConstraint)
         self.qpsolver.addTask(self.postureTask)
+
+        self.targetPosition = mc_tasks.PostureTask(self.qpsolver,self.robot().robotindex(), 1,1)
+        self.qpsolver.addTask(self.targetPosition)
+        self.targetPosition.reset()
 
         self.pGain = np.array([300,300,300,300,150,150,150])
         self.pGain = np.array([9,9,9,9,1.5,1.5,1.5])
@@ -33,6 +38,9 @@ class McController(mc_control.MCPythonController):
         self.logger().addLogEntry("cmd_tau", lambda: self.cmd_tau)
 
     def run_callback(self):
+        if self.targetPosition.eval().norm() < 0.1 or self.t>10 :
+            self.switch_target()
+            self.t = 0
         forward_dynamics = mc_rbdyn.ForwardDynamics(self.robot().mb)
         forward_dynamics.computeC(self.realRobot().mb, self.realRobot().mbc())
         self.observe()
@@ -45,8 +53,8 @@ class McController(mc_control.MCPythonController):
         self.alpha = self.param_to_vector(self.realRobot().mbc.alpha)
         self.c = forward_dynamics.C
     
-    def reset_callback(self, data):
-        pass
+    def reset_callback(self):
+        self.targetPosition.reset()
     
     def switch_target(self):
         pass

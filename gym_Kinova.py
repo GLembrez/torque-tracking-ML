@@ -1,11 +1,9 @@
 import KinovaRL
 import gymnasium as gym
-from stable_baselines3 import PPO
+from sb3_contrib import RecurrentPPO
 import os
 import numpy as np
-
-from stable_baselines3.common.evaluation import evaluate_policy
-from stable_baselines3.ppo.policies import MlpPolicy
+from stable_baselines3.common.logger import configure
 
 
 def evaluate(model, num_episodes=2, deterministic=True):
@@ -36,16 +34,17 @@ def evaluate(model, num_episodes=2, deterministic=True):
 save_path = "/home/gabinlembrez/trained_nets/RL"
 os.makedirs(save_path, exist_ok=True)
 
-env = gym.make("Kinova_RL/KinovaEnv", path="/home/gabinlembrez/GitHub/torque-tracking-ML/python_controller/xml/gen3_7dof_mujoco.xml")
-model = PPO(MlpPolicy, env)
-episode_length = 2500
-n_episode = 100
+env = gym.make("Kinova_RL/KinovaEnv", path="/home/gabinlembrez/GitHub/torque-tracking-ML/xml/gen3_7dof_mujoco.xml")
+model = RecurrentPPO("MlpLstmPolicy", env,verbose=1, learning_rate=1e-3)
+new_logger = configure("/home/gabinlembrez/Torque_tracking_logs/Kinova/sb3_log/", ["stdout", "csv"])
+model.set_logger(new_logger)
+episode_length = 10000
+n_episode = 10
 
-print(model.policy)
 
 reward = evaluate(model,num_episodes=10)
 
-model.learn(total_timesteps=n_episode*episode_length, log_interval=5_000, progress_bar=True)
+model.learn(total_timesteps=n_episode*episode_length, log_interval=10, progress_bar=True)
 
 reward = evaluate(model, num_episodes=10)
 

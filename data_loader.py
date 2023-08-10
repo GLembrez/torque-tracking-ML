@@ -27,9 +27,8 @@ class TorqueTrackingDataset(torch.utils.data.Dataset):
             alpha = np.asarray(self.dataset['alpha'][idt:idt+self.sequence_len].values.tolist())
             tau = np.asarray(self.dataset['tau_d'][idt:idt+self.sequence_len].values.tolist())
             c = np.asarray(self.dataset['c'][idt:idt+self.sequence_len].values.tolist())
-            f = np.asarray(self.dataset['f_point'][idt:idt+self.sequence_len].values.tolist())
+            y = self.dataset['tau_f'][idt+self.sequence_len]
             x = np.concatenate((q,alpha,c,tau),axis=1)
-            y = f
         else :
             return self.__getitem__(idt+self.sequence_len - time_len)
         return x,y

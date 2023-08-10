@@ -30,9 +30,10 @@ class LSTM(nn.Module):
             c_0 = Variable(torch.zeros(self.num_layers, self.hidden_size).cuda()) #internal state
         
          # Propagate input through LSTM
-        output, (h_n, c_n) = self.lstm(x, (h_0, c_0))       #lstm with input, hidden, and internal state  
-        out = self.dropout(output)
-        out = out.clone().contiguous().view(-1, self.hidden_size)   #reshaping the data for Dense layer next
-        out = self.fc(out)      #Final Output
-        # out = out.contiguous().view(-1)
+        output, (h_n, c_n) = self.lstm(x, (h_0, c_0))    
+        if len(x.shape) == 3 :   
+            out = self.dropout(output)[:,-1,:]
+        else:
+            out = self.dropout(output)[-1,:]
+        out = self.fc(out)                              #Final Output
         return out

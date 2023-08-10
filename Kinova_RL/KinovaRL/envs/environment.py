@@ -11,54 +11,57 @@ class KinovaEnv(gym.Env):
     metadata = {}
 
     def __init__(self,path):
-        self.observation_space = spaces.Box(-np.inf, np.inf, shape=(105,), dtype=float)
-        self.action_space = spaces.Box(-10, 10, shape=(7,), dtype=float)
+        self.observation_space = spaces.Box(-np.inf, np.inf, shape=(28,), dtype=float)
+        self.action_space = spaces.Box(-20, 20, shape=(7,), dtype=float)
         self.model = mujoco.MjModel.from_xml_path(path)
         self.data = mujoco.MjData(self.model)
         self.controller = Controller()
         self.controller.register_model(self.model, self.data)
-        self.friction = Friction((1000,10000),
-                                 (0,100),
-                                 (1,4),
-                                 (0,0),
-                                 (0.1,0.6),
-                                 (0.1,0.6),
+        self.friction = Friction((2000000,2000000),
+                                 (10,10),
+                                 (3,5),
+                                 (0.,0),
+                                 (0.5,0.7),
+                                 (0.5,0.7),
                                  (0.01,0.1),
-                                 (0,20))
+                                 (1,10))
         self.friction.register(self.model,self.data, self.controller)
-        self.obs = np.zeros((5,21))
-        self.t=0
+        self.obs = np.zeros((28,))
+        self.t = 0
+        self.T = 100
 
     def _get_obs(self):
-        for i in range(4):
-            self.obs[i,:] = self.obs[i+1,:]
-        self.obs[-1,:7] = self.data.qpos
-        self.obs[-1,7:14] = self.data.qvel
-        self.obs[-1,14:] = self.controller.cmd_tau
-        return self.obs.flatten()
+        self.obs[:7] = self.data.qpos
+        self.obs[7:14] = self.data.qvel
+        self.obs[14:21] = self.data.qfrc_bias
+        self.obs[21:] = self.controller.cmd_tau
+        return self.obs
 
     def _get_info(self):
         return {}
     
     def reset(self, seed=None, options=None):
-        self.obs = np.zeros((5,21))
+        self.obs = np.zeros((28,))
         self.t = 0
         observation = self._get_obs()
         info = self._get_info()
+        self.data.qpos= self.controller.q_s      
+        self.data.qvel= np.zeros(7)        
+        self.friction.update(np.zeros(7),np.zeros(7))       
 
         return observation, info
 
     def step(self,action):
         terminated = False
         if self.controller.t >= self.controller.T :
-            # sample random instances of friction parameters
-            self.friction.randomize()
             # chose random trajectory in joint space
             self.controller.randomize() 
-        
-        if self.t == 100: 
-            terminated = True
+        if self.friction.t >= self.friction.T :
+            # sample random instances of friction parameters
+            self.friction.randomize()    
+        if self.t > self.T :
             self.reset()
+            terminated = True
 
         #initialize reward
         reward = 0
@@ -73,11 +76,11 @@ class KinovaEnv(gym.Env):
 
             # take action
             measured_tau = tau - f 
-            self.data.qfrc_applied = measured_tau
+            self.data.qfrc_applied = self.controller.cmd_tau #measured_tau
             mujoco.mj_step(self.model, self.data)
 
             # compute reward
-            reward += - 1/5 * np.linalg.norm(measured_tau - self.controller.cmd_tau)
+            reward -=  1/35 * np.sum(np.abs((action - f)))
 
             # Compute desired torque
             self.controller.input()
@@ -85,8 +88,8 @@ class KinovaEnv(gym.Env):
         # observe next state
         observation = self._get_obs()
         info = self._get_info()
+        self.t += 5
 
-        self.t += 1
         return observation,reward,terminated,False, info
 
         

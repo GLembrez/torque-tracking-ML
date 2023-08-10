@@ -1,3 +1,6 @@
 Mon Jul 31 13:53:05 2023
 WARNING: mju_openResource: unknown file '/home/gabinlembrez/GitHub/torque-tracking-ML/python_controller/xml/gen3_7dof_mujoco.xml'
 
+Thu Aug 10 09:28:57 2023
+WARNING: Nan, Inf or huge value in QACC at DOF 0. The simulation is unstable. Time = 1.1090.
+

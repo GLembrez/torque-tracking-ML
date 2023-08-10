@@ -18,8 +18,8 @@ from simulation import Simulation
 
 n_DOFs = 7
 input_len = 4
-sequence_len = 10
-num_layers = 2
+sequence_len = 30
+num_layers = 3
 hidden_size = 64
 tol = 1e-2                  # threshold on the improvement of the valid loss
 xml_path = "/home/gabinlembrez/GitHub/torque-tracking-ML/xml/gen3_7dof_mujoco.xml"
@@ -28,8 +28,8 @@ xml_path = "/home/gabinlembrez/GitHub/torque-tracking-ML/xml/gen3_7dof_mujoco.xm
 
 def initialize_net(trained_weights):
     input_len = 28
-    sequence_len = 10
-    net = LSTM(num_features=7, input_size=input_len, hidden_size=64, num_layers=2, seq_length=sequence_len)
+    sequence_len = 30
+    net = LSTM(num_features=7, input_size=input_len, hidden_size=64, num_layers=3, seq_length=sequence_len)
     net = torch.nn.DataParallel(net).cuda()
     net.eval()
     net.load_state_dict(torch.load(trained_weights))

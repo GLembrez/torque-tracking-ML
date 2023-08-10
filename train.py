@@ -20,10 +20,10 @@ n_DOFs = 7
 input_len = 4
 sequence_len = 10
 num_layers = 2
-hidden_size = 64
+hidden_size = 32
 tol = 1e-2                  # threshold on the improvement of the valid loss
-T_train = 5*3600*1000   # train for 5 hours of real time simulation
-T_valid = 60 * 1000     # valid on one minute of real time simulation
+T_train = 10000 # 5*3600*1000   # train for 5 hours of real time simulation
+T_valid = 1000  # 60*1000       # valid on one minute of real time simulation
 xml_path = "/home/gabinlembrez/GitHub/torque-tracking-ML/xml/gen3_7dof_mujoco.xml"
 
 ###################################################################
@@ -50,7 +50,7 @@ def train(net, train_data, criterion, optimizer):
         inputs  = torch.autograd.Variable(inputs.float().cuda())
         targets = torch.autograd.Variable(targets.float().cuda())
         out = net(inputs)
-        loss = criterion(out, targets.view(-1, n_DOFs))  
+        loss = criterion(out, targets)  
         losses.append(loss.data)
         optimizer.zero_grad()
         loss.backward(retain_graph=True)
@@ -70,7 +70,7 @@ def valid(net, valid_data, criterion):
             inputs = torch.autograd.Variable(inputs.float().cuda())
             targets = torch.autograd.Variable(targets.float().cuda())
             out = net(inputs)
-            error.append(criterion(out, targets.view(-1, n_DOFs)))
+            error.append(criterion(out, targets))
     return sum(error)/len(error)
 
 

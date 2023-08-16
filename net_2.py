@@ -4,7 +4,8 @@ from torch.autograd import Variable
 
 class MLP(nn.Module):
     def __init__(self, input_size, output_size, hidden_size):
-
+        super(MLP, self).__init__()
+        
         self.input_size = input_size
         self.output_size = output_size
         self.hidden_size = hidden_size

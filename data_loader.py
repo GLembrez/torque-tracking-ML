@@ -23,12 +23,15 @@ class TorqueTrackingDataset(torch.utils.data.Dataset):
     def __getitem__(self, idt):
         time_len = self.__len__()
         if idt+self.sequence_len < time_len :
-            q = np.asarray(self.dataset['q'][idt:idt+self.sequence_len].values.tolist())
-            alpha = np.asarray(self.dataset['alpha'][idt:idt+self.sequence_len].values.tolist())
+            # q = np.asarray(self.dataset['q'][idt:idt+self.sequence_len].values.tolist())
+            # alpha = np.asarray(self.dataset['alpha'][idt:idt+self.sequence_len].values.tolist())
+            alpha_d = np.asarray(self.dataset['alpha_d'][idt:idt+self.sequence_len].values.tolist())
             tau = np.asarray(self.dataset['tau_d'][idt:idt+self.sequence_len].values.tolist())
             c = np.asarray(self.dataset['c'][idt:idt+self.sequence_len].values.tolist())
-            y = self.dataset['tau_f'][idt+self.sequence_len]
-            x = np.concatenate((q,alpha,c,tau),axis=1)
+            dtau = np.asarray(self.dataset['dtau'][idt:idt+self.sequence_len].values.tolist())
+            y = self.dataset['f_point'][idt+self.sequence_len]
+            # x = np.concatenate((q,alpha,c,tau),axis=1)
+            x = np.concatenate((alpha_d,c,tau,dtau),axis=1)
         else :
             return self.__getitem__(idt+self.sequence_len - time_len)
         return x,y

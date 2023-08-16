@@ -34,7 +34,7 @@ class Friction():
         self.controller = None
 
         self.t = 0
-        self.T = 30000
+        self.T = 60000
 
         self.randomize()
 
@@ -59,6 +59,13 @@ class Friction():
         for i in range(7):
             f[i],e[i],_ = self.compute_joint(tau[i],e[i],i)
         return f,e
+    
+
+    def compute_target(self,tau):
+        target = np.zeros(7)
+        for i in range(7):
+            target[i] = self.compute_target_joint(tau[i],i)
+        return target
     
 
     def compute_joint(self,tau,e,i):
@@ -92,6 +99,34 @@ class Friction():
         e = self.Z * (self.B * e + f * self.dt)
         return f,e,fixed_exists
         
+    def compute_target_joint(self,tau,i):
+        alpha = self.controller.alpha_d[i]
+        c = self.data.qfrc_bias[i]
+        E = np.exp(- np.abs(alpha/self.vs[i]))
+        S = np.sign(alpha)
+        f = ((self.Fs[i] + self.dFs[i]*np.abs(tau - c) ) - \
+            (self.Fc[i] + self.dFc[i]*np.abs(tau - c) )) * E * S + \
+            (self.Fc[i]+ self.dFc[i]*np.abs(tau - c))*S + self.D[i]*alpha
+        return f
+    
+    def compute_target_fixed_point(self,tau_array):
+        for i in range(7):
+            tau = tau_array[i]
+            alpha = self.controller.alpha_d[i]
+            c = self.data.qfrc_bias[i]
+            E = np.exp(- np.abs(alpha/self.vs[i]))
+            S = np.sign(alpha)
+            if tau>c:
+                Fs_tilde = self.Fs[i] + self.dFs[i]*(tau-c)
+                Fc_tilde = self.Fc[i] + self.dFc[i]*(tau-c)
+                self.fixed[i] = (self.D[i]*alpha + (Fs_tilde-Fc_tilde)*E*S + Fc_tilde*S)/\
+                    (1 - (self.dFs[i]-self.dFc[i])*E*S - self.dFc[i]*S)
+            else:
+                Fs_tilde = self.Fs[i] - self.dFs[i]*(tau-c)
+                Fc_tilde = self.Fc[i] - self.dFc[i]*(tau-c)
+                self.fixed[i] = (self.D[i]*alpha + (Fs_tilde-Fc_tilde)*E*S + Fc_tilde*S)/\
+                    (1 - (self.dFc[i]-self.dFs[i])*E*S + self.dFc[i]*S)
+
     
     def update(self,e,f):
         # stores friction and velocity error before computing fixed point

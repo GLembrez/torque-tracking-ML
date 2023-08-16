@@ -22,8 +22,8 @@ sequence_len = 10
 num_layers = 2
 hidden_size = 32
 tol = 1e-2                  # threshold on the improvement of the valid loss
-T_train = 10000 # 5*3600*1000   # train for 5 hours of real time simulation
-T_valid = 1000  # 60*1000       # valid on one minute of real time simulation
+T_train = 5*3600*1000   # train for 5 hours of real time simulation
+T_valid = 60*1000       # valid on one minute of real time simulation
 xml_path = "/home/gabinlembrez/GitHub/torque-tracking-ML/xml/gen3_7dof_mujoco.xml"
 
 ###################################################################
@@ -119,11 +119,12 @@ def main():
     args = ap.parse_args()
 
     
-    sim = Simulation(xml_path)
+    sim1 = Simulation(xml_path)
+    sim2 = Simulation(xml_path)
     # generate training dataset
-    df_train = sim.simulate(T_train)
+    df_train = sim1.simulate(T_train)
     # generate validation datast
-    df_valid = sim.simulate(T_valid)
+    df_valid = sim2.simulate(T_valid)
 
 
     # Create output directory if necessary

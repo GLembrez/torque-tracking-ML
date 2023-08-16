@@ -1,5 +1,6 @@
 import KinovaRL
 import gymnasium as gym
+from stable_baselines3 import PPO
 from sb3_contrib import RecurrentPPO
 import os
 import numpy as np
@@ -35,18 +36,12 @@ save_path = "/home/gabinlembrez/trained_nets/RL"
 os.makedirs(save_path, exist_ok=True)
 
 env = gym.make("Kinova_RL/KinovaEnv", path="/home/gabinlembrez/GitHub/torque-tracking-ML/xml/gen3_7dof_mujoco.xml")
-model = RecurrentPPO("MlpLstmPolicy", env,verbose=1, learning_rate=1e-3)
-new_logger = configure("/home/gabinlembrez/Torque_tracking_logs/Kinova/sb3_log/", ["stdout", "csv"])
-model.set_logger(new_logger)
-episode_length = 10000
-n_episode = 10
+# model = RecurrentPPO("MlpLstmPolicy", env,verbose=1, learning_rate=1e-4,tensorboard_log="/home/gabinlembrez/Torque_tracking_logs/Kinova/log/")
+model = PPO("MlpPolicy", env,verbose=1,tensorboard_log="/home/gabinlembrez/Torque_tracking_logs/Kinova/log/")
 
 
-reward = evaluate(model,num_episodes=10)
+model.learn(total_timesteps=1_000_000, log_interval=1, progress_bar=True)
 
-model.learn(total_timesteps=n_episode*episode_length, log_interval=10, progress_bar=True)
-
-reward = evaluate(model, num_episodes=10)
 
 model.save(f"{save_path}/trained")
 

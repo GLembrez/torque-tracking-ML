@@ -4,7 +4,7 @@ import mujoco_viewer
 import gymnasium as gym
 from gymnasium import spaces
 from matplotlib import pyplot as plt
-from control import Controller
+from control_RL import Controller
 from error import Friction
 
 class KinovaEnv(gym.Env):
@@ -12,23 +12,22 @@ class KinovaEnv(gym.Env):
 
     def __init__(self,path):
         self.observation_space = spaces.Box(-np.inf, np.inf, shape=(28,), dtype=float)
-        self.action_space = spaces.Box(-20, 20, shape=(7,), dtype=float)
+        self.action_space = spaces.Box(-5, 5, shape=(7,), dtype=float)
         self.model = mujoco.MjModel.from_xml_path(path)
         self.data = mujoco.MjData(self.model)
         self.controller = Controller()
         self.controller.register_model(self.model, self.data)
-        self.friction = Friction((2000000,2000000),
-                                 (10,10),
+        self.friction = Friction(20000,10, 
                                  (3,5),
                                  (0.,0),
-                                 (0.5,0.7),
-                                 (0.5,0.7),
+                                 (0.,0.2),
+                                 (0.,0.2),
                                  (0.01,0.1),
                                  (1,10))
         self.friction.register(self.model,self.data, self.controller)
         self.obs = np.zeros((28,))
         self.t = 0
-        self.T = 100
+        self.T = 2500
 
     def _get_obs(self):
         self.obs[:7] = self.data.qpos
@@ -45,50 +44,50 @@ class KinovaEnv(gym.Env):
         self.t = 0
         observation = self._get_obs()
         info = self._get_info()
-        self.data.qpos= self.controller.q_s      
-        self.data.qvel= np.zeros(7)        
-        self.friction.update(np.zeros(7),np.zeros(7))       
+        self.data.qpos= np.zeros(7)
+        self.data.qvel= np.zeros(7)      
+        self.friction.update(np.zeros(7),np.zeros(7))
+        self.friction.randomize()
+        for i in range(7):   
+            self.controller.randomize(i)   
 
         return observation, info
 
     def step(self,action):
-        terminated = False
-        if self.controller.t >= self.controller.T :
-            # chose random trajectory in joint space
-            self.controller.randomize() 
-        if self.friction.t >= self.friction.T :
-            # sample random instances of friction parameters
-            self.friction.randomize()    
-        if self.t > self.T :
+        terminated = False 
+        if (np.abs(self.data.qvel) > 1e-2).all() or self.t > self.T :
             self.reset()
             terminated = True
 
         #initialize reward
         reward = 0
-        for _ in range(5) :
-            # perform 5 simulation steps from one action 
-            # action is the compensation of the friction
-            tau = self.controller.cmd_tau + action
+        # action is the compensation of the friction
+        tau = self.controller.cmd_tau + action
 
-            # compute error
-            f,e = self.friction.compute(tau,self.friction.e)
-            self.friction.update(e,f)
+        # compute error
+        f,e = self.friction.compute(tau,self.friction.e)
+        self.friction.update(e,f)
 
-            # take action
-            measured_tau = tau - f 
-            self.data.qfrc_applied = self.controller.cmd_tau #measured_tau
-            mujoco.mj_step(self.model, self.data)
+        # take action
+        measured_tau = tau - f 
+        self.data.qfrc_applied =measured_tau
+        mujoco.mj_step(self.model, self.data)
 
-            # compute reward
-            reward -=  1/35 * np.sum(np.abs((action - f)))
+        # compute reward
+        for i in range(7):
+            if self.data.qvel[i] < 1e-3:
+                # strong penalty for not accounting for stiction
+                reward -= 1
+            # precision penalty
+            reward -= np.linalg.norm(self.data.qvel - self.controller.alpha_d)
 
-            # Compute desired torque
-            self.controller.input()
+        # Compute desired torque
+        self.controller.input()
 
         # observe next state
         observation = self._get_obs()
         info = self._get_info()
-        self.t += 5
+        self.t += 1
 
         return observation,reward,terminated,False, info
 

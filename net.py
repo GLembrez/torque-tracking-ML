@@ -37,3 +37,9 @@ class LSTM(nn.Module):
             out = self.dropout(output)[-1,:]
         out = self.fc(out)                              #Final Output
         return out
+    
+    # def forward(self,x,h,c):
+    #     output, (h_n, c_n) = self.lstm(x, (h, c))
+    #     out = self.dropout(output)[-1,:]
+    #     out = self.fc(out)
+    #     return out,h_n,c_n

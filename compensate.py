@@ -8,10 +8,9 @@ import mujoco
 
 import torch
 import torch.backends.cudnn as cudnn
-from torch.utils.data import DataLoader
 
 from net import LSTM
-from data_loader import TorqueTrackingDataset
+from net_2 import MLP
 from simulation import Simulation
 
 
@@ -30,7 +29,8 @@ xml_path = "/home/gabinlembrez/GitHub/torque-tracking-ML/xml/gen3_7dof_mujoco.xm
 def initialize_net(trained_weights):
     input_len = 28
     sequence_len = 10
-    net = LSTM(num_features=7, input_size=input_len, hidden_size=32, num_layers=2, seq_length=sequence_len)
+    # net = LSTM(num_features=7, input_size=input_len, hidden_size=32, num_layers=2, seq_length=sequence_len)
+    net = MLP(63,7,64)
     net = torch.nn.DataParallel(net).cuda()
     net.eval()
     net.load_state_dict(torch.load(trained_weights))
@@ -59,9 +59,11 @@ def clean_plot(df,loss):
     for i in range(7):
         ax = time_perf.add_subplot(7,1,i+1)
         pred = [t[i] for t in df["out"]]
-        error = [t[i] for t in df["dtau"]]
+        error = [t[i] for t in df["Fs"]]
+        friction = [t[i] for t in df["tau_f"]]
         ax.plot(pred,color='teal',label="prediction")
         ax.plot(error,color='lightsalmon',label="real error")
+        #ax.plot(friction,color='red',label="real friction")
         plt.legend()
         ax.set_ylabel("DOF "+str(i+1))
     ax.set_xlabel("iteration")
@@ -70,7 +72,7 @@ def clean_plot(df,loss):
 
 @torch.no_grad()
 def run_model(sim,model):
-    input = torch.zeros(10,28).cuda()
+    input = torch.zeros(3,21).cuda()
     out = torch.zeros(7).cuda()
     dtau = np.zeros((7,))
     loss = []
@@ -79,16 +81,23 @@ def run_model(sim,model):
     while True:
         if sim.viewer.is_alive:
             sim.controller.input()
-            f,e = sim.friction.compute(sim.controller.cmd_tau,sim.friction.e)
-            sim.friction.update(e,f)
-            if sampler == 5:
-                X = torch.zeros(1,28).cuda()
-                X[-1,:7] = torch.from_numpy(sim.controller.alpha_d).cuda()
-                X[-1,7:14] = torch.from_numpy(sim.data.qfrc_bias).cuda()
-                X[-1,14:21] = torch.from_numpy(sim.controller.cmd_tau).cuda()
-                X[-1,21:] = torch.from_numpy(sim.friction.f).cuda()
+            dtau_mes,e = sim.friction.compute(sim.controller.cmd_tau,sim.friction.e)
+            sim.friction.update(e,dtau_mes)
+            f = sim.friction.compute_target(sim.controller.cmd_tau)
+            sim.friction.compute_target_fixed_point(sim.controller.cmd_tau)
+            if sampler == 4:
+                X = torch.zeros(1,21).cuda()
+                X[-1,:7] = torch.from_numpy(sim.controller.cmd_tau.copy()).cuda()
+                X[-1,7:14] = torch.from_numpy(sim.friction.f.copy()).cuda()
+                X[-1,14:21] = torch.from_numpy(sim.data.qvel.copy()).cuda()
+                # X[-1,21:] = torch.from_numpy(sim.controller.alpha_d.copy()).cuda()
                 input = torch.cat((input[1:,:],X))
-                out = model(input)
+                # X = torch.zeros(28).cuda()
+                # X[:7] = torch.from_numpy(sim.data.qvel).cuda()
+                # X[7:14] = torch.from_numpy(sim.controller.alpha_d).cuda()
+                # X[14:21] = torch.from_numpy(sim.data.qpos).cuda()
+                # X[21:] = torch.from_numpy(sim.controller.q_d).cuda()
+                out = model(input.flatten())
                 # out,input = fixed_point(model,input)
                 dtau = out.cpu().numpy().copy()
                 # sim.friction.find_fixed_point()
@@ -96,9 +105,9 @@ def run_model(sim,model):
                 sim.update_log(f,dtau)
 
 
-            loss.append(np.linalg.norm(dtau-sim.friction.f))
+            loss.append(np.linalg.norm(dtau-sim.friction.Fs))
             # command the actuators. for real behaviour under compensation, add + dtau - sim.friction.f
-            sim.data.qfrc_applied = sim.controller.cmd_tau - f
+            sim.data.qfrc_applied = sim.controller.cmd_tau - dtau_mes
             mujoco.mj_step(sim.model, sim.data)
             sim.viewer.render()
             for i in range(7):

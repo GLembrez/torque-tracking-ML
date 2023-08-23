@@ -36,11 +36,11 @@ save_path = "/home/gabinlembrez/trained_nets/RL"
 os.makedirs(save_path, exist_ok=True)
 
 env = gym.make("Kinova_RL/KinovaEnv", path="/home/gabinlembrez/GitHub/torque-tracking-ML/xml/gen3_7dof_mujoco.xml")
-# model = RecurrentPPO("MlpLstmPolicy", env,verbose=1, learning_rate=1e-4,tensorboard_log="/home/gabinlembrez/Torque_tracking_logs/Kinova/log/")
-model = PPO("MlpPolicy", env,verbose=1,tensorboard_log="/home/gabinlembrez/Torque_tracking_logs/Kinova/log/")
+model = RecurrentPPO("MlpLstmPolicy", env,verbose=1, learning_rate=1e-5,tensorboard_log="/home/gabinlembrez/Torque_tracking_logs/Kinova/log/")
+#model = PPO("MlpPolicy", env,verbose=1,tensorboard_log="/home/gabinlembrez/Torque_tracking_logs/Kinova/log/")
 
 
-model.learn(total_timesteps=1_000_000, log_interval=1, progress_bar=True)
+model.learn(total_timesteps=100_000, log_interval=10, progress_bar=True)
 
 
 model.save(f"{save_path}/trained")

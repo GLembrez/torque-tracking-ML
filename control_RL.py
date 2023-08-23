@@ -32,7 +32,7 @@ class Controller():
         
     def randomize(self,i):
         # 1 for continuous motion 2 for training
-        self.q_s[i] = 0
+        self.q_s[i] = self.q_f[i]
         # self.q_s = np.random.uniform(self.q_lims[:,0], self.q_lims[:,1], size=7) 
         self.q_f[i] = np.random.uniform(self.q_lims[i,0], self.q_lims[i,1], size=1)
         self.t[i] = 0

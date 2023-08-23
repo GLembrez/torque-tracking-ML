@@ -10,7 +10,7 @@ import torch
 import torch.backends.cudnn as cudnn
 from torch.utils.data import DataLoader
 
-from net_2 import MLP
+from net_2 import LSTM
 from data_loader_2 import TorqueTrackingDataset
 from simulation import Simulation
 
@@ -18,11 +18,13 @@ from simulation import Simulation
 
 n_DOFs = 7
 input_len = 4
+sequence_len = 10
+num_layers = 2
 hidden_size = 32
 tol = 1e-2                  # threshold on the improvement of the valid loss
-T_train = 1000 # 5*3600*1000   # train for 5 hours of real time simulation
-T_valid = 1000 # 60*1000       # valid on one minute of real time simulation
-xml_path = "/home/gabinlembrez/GitHub/torque-tracking-ML/xml/gen3_7dof_mujoco.xml"
+T_train = 5*3600*1000   # train for 5 hours of real time simulation
+T_valid = 60*1000       # valid on one minute of real time simulation
+xml_path = "/home/glembrez/torque_tracking_ML/xml/gen3_7dof_mujoco.xml"
 
 ###################################################################
 
@@ -73,9 +75,19 @@ def valid(net, valid_data, criterion):
 
 
 
-def initialize_net(trained_weights,input_len,output_len,hidden_len):
+def initialize_net(trained_weights,
+                   input_len,
+                   sequence_len,
+                   num_features,
+                   hidden_size,
+                   num_layers
+                   ):
     
-    net = MLP(input_len,output_len,hidden_len)
+    net = LSTM(num_features=num_features,
+               input_size=input_len*num_features, 
+               hidden_size=hidden_size, 
+               num_layers=num_layers, 
+               seq_length=sequence_len)
     
     net = torch.nn.DataParallel(net).cuda()
     net.eval()
@@ -148,21 +160,25 @@ def main():
 
 
 
-    net = MLP(n_DOFs*input_len, n_DOFs, hidden_size)
+    net = LSTM(num_features=n_DOFs,
+               input_size=input_len*n_DOFs, 
+               hidden_size=hidden_size, 
+               num_layers=num_layers, 
+               seq_length=sequence_len)
     
     net = torch.nn.DataParallel(net).cuda()
 
-    criterion = torch.nn.MSELoss().cuda()
+    criterion = torch.nn.BCELoss().cuda()
     optimizer = torch.optim.Adam(net.parameters(), lr=args.rate)
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99)
     logging.info(repr(optimizer))
     ncpus = os.cpu_count()
 
-    train_set = TorqueTrackingDataset(df_train)
+    train_set = TorqueTrackingDataset(input_len,n_DOFs,sequence_len, df_train)
     train_data = DataLoader(train_set, batch_size=args.batch_size, shuffle=True, num_workers=ncpus, drop_last=True)
     logging.info("train data: %d batches of batch size %d", len(train_data), args.batch_size)
 
-    valid_set = TorqueTrackingDataset(df_valid)
+    valid_set = TorqueTrackingDataset(input_len,n_DOFs,sequence_len, df_valid)
     valid_data = DataLoader(valid_set, batch_size=args.batch_size, shuffle=True, num_workers=ncpus, drop_last=True)
     logging.info("valid data: %d batches of batch size %d", len(valid_data), args.batch_size)
 
@@ -177,10 +193,10 @@ def main():
                 train_loss = train(net, train_data, criterion, optimizer)
                 valid_loss_new = valid(net, valid_data, criterion)
 
-                if torch.abs(valid_loss_new-valid_loss)<tol:
-                    torch.save(net.state_dict(), os.path.join(args.outdir, "trained.model"))
-                    plot_loss(log_valid,log_train)
-                    break
+                # if torch.abs(valid_loss_new-valid_loss)<tol:
+                #     torch.save(net.state_dict(), os.path.join(args.outdir, "trained.model"))
+                #     plot_loss(log_valid,log_train)
+                #     break
 
                 valid_loss = valid_loss_new
                 log_valid.append(valid_loss.cpu().numpy())

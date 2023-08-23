@@ -2,17 +2,15 @@ import os
 import logging
 import random
 import argparse
-import numpy as np
-from matplotlib import pyplot as plt
-from progress.bar import Bar
-
 import torch
-import torch.backends.cudnn as cudnn
+from progress.bar import Bar
 from torch.utils.data import DataLoader
-
 from net import LSTM
 from data_loader import TorqueTrackingDataset
 from simulation import Simulation
+from matplotlib import pyplot as plt
+import torch.backends.cudnn as cudnn
+import numpy as np
 
 ####################### HYPERPARAMETERS ###########################
 
@@ -21,16 +19,18 @@ input_len = 4
 sequence_len = 10
 num_layers = 2
 hidden_size = 32
-tol = 1e-2                  # threshold on the improvement of the valid loss
-T_train = 5*3600*1000   # train for 5 hours of real time simulation
-T_valid = 60*1000       # valid on one minute of real time simulation
+tol = 1e-2              # threshold on the improvement of the valid loss
+T_train = 3600*1000     # Number of training steps
+T_valid = 600*1000      # Number of validation steps
 xml_path = "/home/gabinlembrez/GitHub/torque-tracking-ML/xml/gen3_7dof_mujoco.xml"
 
 ###################################################################
 
 
 def plot_loss(valid,train):
-
+    """
+    plots validation and training loss
+    """
     fig = plt.figure()
     plt.plot(valid, color='teal', label='valid loss')
     plt.plot(train, color='lightsalmon', label='train loss')
@@ -42,7 +42,14 @@ def plot_loss(valid,train):
 
 
 def train(net, train_data, criterion, optimizer):
+    """
+    trains the model net through the whole dataset train_data once
+    returns the average loss during the epoch
 
+    inputs  - tensor of shape (n_batch, sequence_len, n_input)
+    targets - tensor of shape (n_batch, n_input)
+    out     - tensor of shape (n_batch, n_input)
+    """
     net.train()
     losses = []
     tbar = Bar('Training', max=len(train_data))
@@ -62,7 +69,15 @@ def train(net, train_data, criterion, optimizer):
 
 @torch.no_grad()
 def valid(net, valid_data, criterion):
+    """
+    evaluates net on the valid dataset
+    returns the average loss 
+    gradients are not computed to speed the process
 
+    inputs  - tensor of shape (n_batch, sequence_len, n_input)
+    targets - tensor of shape (n_batch, n_input)
+    out     - tensor of shape (n_batch, n_input)
+    """
     net.eval()
     error = []
     with torch.no_grad():
@@ -82,6 +97,9 @@ def initialize_net(trained_weights,
                    hidden_size,
                    num_layers
                    ):
+    """
+    Uses stored weights to initialize a pre-trained network and returns it
+    """
     
     net = LSTM(num_features=num_features,
                input_size=input_len*num_features, 
@@ -118,12 +136,11 @@ def main():
     ap.add_argument("--rate", required=False, default=1e-3, type=float)
     args = ap.parse_args()
 
-    
+    # create mujoco simulations
     sim1 = Simulation(xml_path)
     sim2 = Simulation(xml_path)
-    # generate training dataset
+    # generate training and validation datasets
     df_train = sim1.simulate(T_train)
-    # generate validation datast
     df_valid = sim2.simulate(T_valid)
 
 
@@ -159,29 +176,30 @@ def main():
     torch.set_default_tensor_type(torch.FloatTensor)
 
 
-
+    # create model and set to parallel
     net = LSTM(num_features=n_DOFs,
                input_size=input_len*n_DOFs, 
                hidden_size=hidden_size, 
                num_layers=num_layers, 
                seq_length=sequence_len)
-    
     net = torch.nn.DataParallel(net).cuda()
 
+    # initialize training
     criterion = torch.nn.MSELoss().cuda()
     optimizer = torch.optim.Adam(net.parameters(), lr=args.rate)
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99)
     logging.info(repr(optimizer))
     ncpus = os.cpu_count()
 
-    train_set = TorqueTrackingDataset(input_len,n_DOFs,sequence_len, df_train)
+    # Creates training and validation data loaders
+    train_set = TorqueTrackingDataset(sequence_len, df_train)
     train_data = DataLoader(train_set, batch_size=args.batch_size, shuffle=True, num_workers=ncpus, drop_last=True)
     logging.info("train data: %d batches of batch size %d", len(train_data), args.batch_size)
-
-    valid_set = TorqueTrackingDataset(input_len,n_DOFs,sequence_len, df_valid)
+    valid_set = TorqueTrackingDataset(sequence_len, df_valid)
     valid_data = DataLoader(valid_set, batch_size=args.batch_size, shuffle=True, num_workers=ncpus, drop_last=True)
     logging.info("valid data: %d batches of batch size %d", len(valid_data), args.batch_size)
 
+    # train loop
     with torch.autograd.set_detect_anomaly(True):
         valid_loss = valid(net, valid_data, criterion)
         log_valid = []
@@ -189,15 +207,20 @@ def main():
         try:
             for epoch in range(args.epochs):
                 if args.outdir and epoch%args.checkpoint==0:
+                    # save every checkpoint epoch
                     torch.save(net.state_dict(), os.path.join(args.outdir, "trained_" + str(int(epoch)) + ".model"))
+                
+                # train and evaluate the model
                 train_loss = train(net, train_data, criterion, optimizer)
                 valid_loss_new = valid(net, valid_data, criterion)
 
                 if torch.abs(valid_loss_new-valid_loss)<tol:
+                    # Save if threshold on improvement over the valid data is met
                     torch.save(net.state_dict(), os.path.join(args.outdir, "trained.model"))
                     plot_loss(log_valid,log_train)
                     break
-
+                
+                # update losses
                 valid_loss = valid_loss_new
                 log_valid.append(valid_loss.cpu().numpy())
                 log_train.append(train_loss.cpu().numpy())
@@ -206,9 +229,11 @@ def main():
                             valid_loss.item())
                 if epoch%10==0:
                     lr_scheduler.step()
+            # if finishes without metting stagnation
             torch.save(net.state_dict(), os.path.join(args.outdir, "trained.model"))
             plot_loss(log_valid,log_train)
         except:
+            # In case of interruption save anyway
             torch.save(net.state_dict(), os.path.join(args.outdir, "trained.model"))
             plot_loss(log_valid,log_train)
 
